@@ -1,0 +1,34 @@
+; INVALID AT PRESENT
+; THE PROBLEM IS HOW TO MAINTAIN KEYBOARD INPUT?
+; DO WE GET THE SIGNAL AT ONCE WHEN AN INPUT IS PRESENTED? OR WHAT?
+; LET US ASSUME THAT ALL IMPUTS CONSIST OF 4 SINGLE-NUMBERS
+CODE SEGMENT
+    ASSUME CS:CODE
+START:      MOV CX, 4
+            MOV DX, 0       ; SAVE THE RESULT OF INPUT TO DX
+INPUT:      MOV AH, 0
+            INT 33H         ; READ THE CURRENT INPUT AND SAVE TO AL
+            TEST AL, 10H    ; TEST IF D4=1 (VALID INPUT). IF INVALID, JMP TO INPUT AGAIN
+            JZ INPUT        
+
+            CMP AL, 10      ; IF AL HAS AN INPUT, COMPARE AL WITH 10, IF CF=0, AL>=10. IF AL >=10, THEN IT'S AN INVALID INPUT
+            JNC EXCEPTION   
+            CMP CX, 16      ;IF CX == 16, THEN THIS IS THE LAST LOOP. JMP TO OUTPUT.
+            JMP OUTPUT
+            
+            ROR AX, CX
+            OR DX, AX
+            ADD CX, 4       ; ADD UP CX
+            JMP INPUT
+
+OUTPUT:     ROR AX, CX
+            OR DX, AX
+            MOV AH, 1
+            INT 32H
+            JMP START
+
+EXCEPTION:  MOV AH, 1       ; SET A[3:0] TO 0000
+            MOV DX, 0
+            INT 32H
+            JMP START
+
