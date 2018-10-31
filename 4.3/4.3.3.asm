@@ -5,41 +5,44 @@ DATA ENDS
 
 CODE SEGMENT
     ASSUME CS:CODE
-START:      MOV AH, 0
+START:      XOR AH, AH
             INT 31H         ; SAVE (A,B)->(DH,DL)
-INPUT:      MOV AH, 0
+INPUT:      XOR AH, AH
             INT 33H         ; READ THE CURRENT INPUT AND SAVE TO AL
-            TEST AL, 10H    ; IF AL[4]=0, THERE IS NO INPUT, AND WE WAIT FOR AN INPUT AGAIN
-            JZ INPUT    
-            TEST AL, 0FFH   ; IF AL = 0, INPUT IS INVALID 
-            JZ EXCEPTION
-            CMP AL, 4       ; IF AL >=4, INPUT IS INVALID (CF=0)
-            JNC EXCEPTION
-            CMP AL, 3       ; IF AL==3, MULTIPLICATION  (CF=0,ZF=0)
+            ;TEST AL, 10H    ; IF AL[4]=0, THERE IS NO INPUT, AND WE WAIT FOR AN INPUT AGAIN
+            ;JZ INPUT    
+            ;TEST AL, 0FFH   ; IF AL = 0, INPUT IS INVALID 
+            ;JZ EXCEPTION
+            ;CMP AL, 4       ; IF AL >=4, INPUT IS INVALID (CF=0)
+            ;JNC EXCEPTION
+            CMP AL, 10011B       ; IF AL==10011B, MULTIPLICATION  (CF=0,ZF=0)
             JZ MULTIPLICATION
-            CMP AL, 2
+            CMP AL, 10010B
             JZ SUBTRACTION
-            CMP AL, 1
+            CMP AL, 10001B
             JZ ADDITION
-ADDITION:   MOV CL, DH
-            AND DX, 0FFH
+            JMP START ; Serica: 除了上面三种情况，其余输入都是非法的，直接返回START
+ADDITION:   MOV CL, DH ; A的值放入CL中
+            AND DX, 0FH ; Serica: not AND DX, 0FFH DX高8位清零
             ADD DX, CX      ; SAVE THE RESULT TO DX STILL
+            CMP DX, 10000   ; Serica: 计算结果与10000比较
+            JNC EEE   ; CF=0，即(DX)>=10000(>9999) 显示E
             JMP OUTPUT
 SUBTRACTION:    MOV CL, DH
-                AND DX, 0FFH
+                AND DX, 0FH
                 SUB DX, CX
-                JS EEE
+                JC EEE
                 JMP OUTPUT
 MULTIPLICATION: MOV AL, DH
-                AND DX, 0FFH
+                ; AND DX, 0FFH Serica: not necessary
                 MUL DL
-                CMP AX, 10000   ;COMPARE AX AND 10000. IF AX > 9999(CF=0), JUMP TO EEE
+                CMP AX, 10000   ; COMPARE AX AND 10000. IF AX > 9999(CF=0), JUMP TO EEE
                 JNC EEE
                 MOV DX, AX
                 JMP OUTPUT
 EEE:        MOV DX, 0EEEEH
-            MOV AH, 0
-            INT 30H
+            MOV AH, 1   ; Serica：是显示到数码管上orz
+            INT 32H     ; Serica：是显示到数码管上orz
             JMP START
 EXCEPTION:  MOV DX, 0FFFFH
             MOV AH, 0

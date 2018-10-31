@@ -1,0 +1,50 @@
+Microsoft (R) Macro Assembler Version 6.11		    10/31/18 17:14:36
+4.2.3.asm						     Page 1 - 1
+
+
+				ASSUME DS:DATA, CS:CODE
+
+ 0000				DATA SEGMENT
+ 0000 00 01 04 09 10 19		    TABLE DB 0, 1, 4, 9, 16, 25, 36, 49, 64, 81
+       24 31 40 51
+ 000A				DATA ENDS
+
+ 0000				CODE SEGMENT
+ 0000				START:
+ 0000  B8 0080			    MOV AX, 0080H   ; DATA segment starts from 0080H
+ 0003  8E D8			    MOV DS, AX  ; reset DS register
+ 0005  CD 31			    INT 31H     ; read input into DX
+ 0007  BB 0000 R		    MOV BX, OFFSET TABLE    ; set base address
+ 000A  8A C2			    MOV AL, DL              ; set offset
+ 000C  D7			    XLAT    ; look up for the table
+ 000D  8A D0			    MOV DL, AL
+ 000F  B0 03			    MOV AL, 03H
+ 0011  CD 32			    INT 32H     ; AH=00H
+ 0013  FE C4			    INC AH
+ 0015  CD 32			    INT 32H     ; display
+ 0017  EB E7			    JMP START
+ 0019				CODE ENDS
+				    END START
+Microsoft (R) Macro Assembler Version 6.11		    10/31/18 17:14:36
+4.2.3.asm						     Symbols 2 - 1
+
+
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+CODE . . . . . . . . . . . . . .	16 Bit	 0019	  Para	  Private 
+DATA . . . . . . . . . . . . . .	16 Bit	 000A	  Para	  Private 
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+START  . . . . . . . . . . . . .	L Near	 0000	  CODE	
+TABLE  . . . . . . . . . . . . .	Byte	 0000	  DATA	
+
+	   0 Warnings
+	   0 Errors
