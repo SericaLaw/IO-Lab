@@ -6,6 +6,9 @@ DATA ENDS
 CODE SEGMENT
     ASSUME CS:CODE
 START:      XOR AH, AH
+            MOV AL,0FH      ; Serica: 设置数码管d3~d0允许显示
+            INT 32H         ; Serica: 设置数码管d3~d0允许显示
+            XOR AL,AL       ; Serica: AL清零
             INT 31H         ; SAVE (A,B)->(DH,DL)
 INPUT:      XOR AH, AH
             INT 33H         ; READ THE CURRENT INPUT AND SAVE TO AL
