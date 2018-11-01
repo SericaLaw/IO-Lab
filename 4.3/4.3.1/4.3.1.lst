@@ -1,0 +1,59 @@
+Microsoft (R) Macro Assembler Version 6.11		    11/01/18 09:30:49
+4.3.1.asm						     Page 1 - 1
+
+
+ 0000				DATA SEGMENT
+ 0000 000A			    DIVIDER DW 10
+ 0002				DATA ENDS
+
+ 0000				CODE SEGMENT 
+				    ASSUME CS:CODE, DS:DATA
+ 0000  B4 00			START:  MOV AH, 0
+4.3.1.asm(7): warning A4012: line number information for segment without class 'CODE' : CODE
+ 0002  CD 31			        INT 31H             ; READ FROM SWITCH
+ 0004  81 E2 1FFF		        AND DX, 1FFFH        ; REDUCE INPUT TO 13BIT. NOTE THAT SINCE 2^13=8192, THE RESULT HAS AT MOST 4 BITS
+ 0008  8B C2			        MOV AX, DX           
+ 000A  B1 00			        MOV CL, 0           ; THE NUMER TO ROTATE
+ 000C  BB 0000			        MOV BX, 0           ; SET BX TO 0. THE FINAL ANS IS SAVED TO [BX]
+ 000F  F7 36 0000 R		TRANS:  DIV DIVIDER         ; AX STORES THE RESULT WHILE DX STORES THE REMAINDERH. NOTE THAT THE RESULT HAS AT MOST 10
+ 0013  D3 E2			        SAL DX, CL          ; SHIFT DX TO THE LEFT 4/8/12/16BITS
+ 0015  0B DA			        OR  BX, DX          ; SAVE THE RESULT TO [BX]
+ 0017  80 C1 04			        ADD CL, 4           ; NEXT TIME, SHIFT 4BITS MORE
+ 001A  A9 FFFF			        TEST AX, 0FFFFH      ; TEST IF THERE ARE NO RESULTS
+ 001D  75 F0			        JNZ TRANS           ; IF THE RESULT IS 0, THEN LOOP ENDS
+ 001F  B4 01			        MOV AH, 1
+ 0021  8B D3			        MOV DX, BX
+ 0023  CD 32			        INT 32H
+ 0025				CODE ENDS
+				    END START
+				        
+
+
+				        
+
+
+
+Microsoft (R) Macro Assembler Version 6.11		    11/01/18 09:30:49
+4.3.1.asm						     Symbols 2 - 1
+
+
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+CODE . . . . . . . . . . . . . .	16 Bit	 0025	  Para	  Private 
+DATA . . . . . . . . . . . . . .	16 Bit	 0002	  Para	  Private 
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+DIVIDER  . . . . . . . . . . . .	Word	 0000	  DATA	
+START  . . . . . . . . . . . . .	L Near	 0000	  CODE	
+TRANS  . . . . . . . . . . . . .	L Near	 000F	  CODE	
+
+	   1 Warnings
+	   0 Errors

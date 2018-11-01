@@ -1,9 +1,9 @@
-DATA SEGMENT
+DATA SEGMENT 'DATA'
     DIVIDER DW 10
 DATA ENDS
 
 
-CODE SEGMENT
+CODE SEGMENT 'CODE'
     ASSUME CS:CODE
 START:      XOR AH, AH
             MOV AL,0FH      ; Serica: 设置数码管d3~d0允许显示
@@ -25,10 +25,10 @@ INPUT:      XOR AH, AH
             CMP AL, 10001B
             JZ ADDITION
             JMP START ; Serica: 除了上面三种情况，其余输入都是非法的，直接返回START
-ADDITION:   MOV CL, DH ; A的值放入CL中
-            AND DX, 0FH ; Serica: not AND DX, 0FFH DX高8位清零
+ADDITION:   MOV CL, DH ; A的�?�放入CL�?
+            AND DX, 0FH ; Serica: not AND DX, 0FFH DX�?8位清�?
             ADD DX, CX      ; SAVE THE RESULT TO DX STILL
-            CMP DX, 10000   ; Serica: 计算结果与10000比较
+            CMP DX, 10000   ; Serica: 计算结果�?10000比较
             JNC EEE   ; CF=0，即(DX)>=10000(>9999) 显示E
             JMP OUTPUT
 SUBTRACTION:    MOV CL, DH
@@ -55,7 +55,8 @@ EXCEPTION:  MOV DX, 0FFFFH
 OUTPUT: MOV AX, DX           
         MOV CL, 0           ; THE NUMER TO ROTATE
         MOV BX, 0           ; SET BX TO 0. THE FINAL ANS IS SAVED TO [BX]
-TRANS:  DIV DIVIDER         ; AX STORES THE RESULT WHILE DX STORES THE REMAINDERH. NOTE THAT THE RESULT HAS AT MOST 10
+TRANS:  MOV CH, 10
+        DIV CH              ; AX STORES THE RESULT WHILE DX STORES THE REMAINDERH. NOTE THAT THE RESULT HAS AT MOST 10
         SAL DX, CL          ; SHIFT DX TO THE LEFT 0/4/8/12BITS
         OR  BX, DX          ; SAVE THE RESULT TO [BX]
         ADD CL, 4           ; NEXT TIME, SHIFT 4BITS MORE

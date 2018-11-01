@@ -2,7 +2,7 @@
 ; THE PROBLEM IS HOW TO MAINTAIN KEYBOARD INPUT?
 ; DO WE GET THE SIGNAL AT ONCE WHEN AN INPUT IS PRESENTED? OR WHAT?
 ; LET US ASSUME THAT ALL IMPUTS CONSIST OF 4 SINGLE-NUMBERS
-CODE SEGMENT
+CODE SEGMENT 'CODE'
     ASSUME CS:CODE
 START:      MOV CX, 4
             MOV DX, 0       ; SAVE THE RESULT OF INPUT TO DX
@@ -16,12 +16,12 @@ INPUT:      MOV AH, 0
             CMP CX, 16      ;IF CX == 16, THEN THIS IS THE LAST LOOP. JMP TO OUTPUT.
             JMP OUTPUT
             
-            ROR AX, CX
+            ROR AX, CL
             OR DX, AX
             ADD CX, 4       ; ADD UP CX
             JMP INPUT
 
-OUTPUT:     ROR AX, CX
+OUTPUT:     ROR AX, CL
             OR DX, AX
             MOV AH, 1
             INT 32H
@@ -31,4 +31,6 @@ EXCEPTION:  MOV AH, 1       ; SET A[3:0] TO 0000
             MOV DX, 0
             INT 32H
             JMP START
+CODE ENDS
+    END START
 
