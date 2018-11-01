@@ -1,0 +1,123 @@
+Microsoft (R) Macro Assembler Version 6.11		    11/01/18 20:14:45
+4.5.1.asm						     Page 1 - 1
+
+
+ 0000				CODE SEGMENT 'CODE'
+				    ASSUME CS:CODE
+ 0000				START:  
+ 0000  B0 FF			INPUT_SESS: MOV AL, 0FFH     ; SET AL TO 1111 1111 B
+ 0002  32 E4			            XOR AH, AH      ; SET AH=0
+ 0004  CD 32			            INT 32H         ; ENABLE A[5:0]
+ 0006  BA FFFF			            MOV DX, 0FFFFH  
+ 0009  B4 01			            MOV AH, 1       
+ 000B  CD 32			            INT 32H         ; SET A[3:0] TO FFFF
+ 000D  33 D2			            XOR DX, DX      ; THE RESULT WOULD BE SAVED TO DX(DL), AND IT IS INITIALIED INTO 00H
+ 000F  B1 04			            MOV CL, 4
+ 0011  32 E4			SAVE_RES:   XOR AH, AH
+ 0013  CD 33			            INT 33H         ; SAVE INPUT TO AL. THE REAL INPUT IS AL[3..0]
+ 0015  3C 10			            CMP AL, 10H     ; COMPARE AL WITH 0. IF CF=1, THEN INPUT IS INVALID
+ 0017  72 F8			            JC SAVE_RES
+ 0019  3C 1A			            CMP AL, 1AH     ; COMPARE AL WITH A. IF ZF=1, JUMP TO GUESS. ELSE IF CF = 0, INPUT IS INVALID.
+ 001B  74 0E			            JZ GUESS_SESS
+ 001D  73 F2			            JNC SAVE_RES
+ 001F  D2 E2			            SHL DL, CL      ; ROTATE CH TO ITS LEFT BY FOUR BITS
+ 0021  24 0F			            AND AL, 0FH     ; DELETE A[4]
+ 0023  0A D0			            OR DL, AL       ; SAVE THE NEWLY INPUT DIGIT TO DL
+ 0025  B4 02			            MOV AH, 2
+ 0027  CD 32			            INT 32H         ; SHOW THE NEWLY INPUT DIGIT.
+ 0029  EB E6			            JMP SAVE_RES
+
+ 002B  8B DA			GUESS_SESS: MOV BX, DX      ; REMOVE THE RESULT FROM REGISTER DX TO REGISTER BX(BL)
+ 002D  BA FFFF			            MOV DX, 0FFFFH  ; SET A[7:4] TO FFFF
+ 0030  B4 02			            MOV AH, 2
+ 0032  CD 32			            INT 32H         ; HIDE THE TRUE RESULT AND SHOW FFFF INSTEAD ON A[7:4]
+
+				; DOES ANY MORE OPERATION NEED OT BE INSERTED?
+				; CAN WE USE SI TO SAVE THE NUMBER OF TRIALS?
+ 0034  33 F6			            XOR SI, SI
+ 0036  8B D6			            MOV DX, SI
+ 0038  B4 01			            MOV AH, 1
+ 003A  CD 32			            INT 32H         ; SET A[3:0] TO THE NUMBER OF TRIALS TAKEN
+
+ 003C  B9 0002			G_INPUT:    MOV CX, 2       
+ 003F  33 D2			            XOR DX, DX
+ 0041  32 E4			            XOR AH, AH
+ 0043  CD 33			            INT 33H         ; READ FROM KEYBOARD, STORE IN AL
+ 0045  3C 10			            CMP AL, 10H     ; COMPARE AL WITH 0. IF CF=1, THEN INPUT IS INVALID AND WE DO NOT SHOW IT
+ 0047  72 F3			            JC G_INPUT
+ 0049  3C 1A			            CMP AL, 1AH     ; COMPARE AL WITH A. IF CF=0, INPUT IS INVALID AND WE DO NOT SHOW IT
+ 004B  74 35			            JZ SHOW_RES
+ 004D  72 ED			            JC G_INPUT
+ 004F  24 0F			            AND AL, 0FH     ; IF INPUT IS VALID, THEN
+ 0051  02 D2			            ADD DL, DL      ; SHIFT DX LEFT 4 BITS
+ 0053  02 D2			            ADD DL, DL
+ 0055  02 D2			            ADD DL, DL
+ 0057  02 D2			            ADD DL, DL
+ 0059  0A D0			            OR DL, AL       ; SAVE DIGIT
+ 005B  E2 DF			            LOOP G_INPUT
+ 005D  46			            INC SI
+ 005E  3B D3			            CMP DX, BX
+ 0060  8B D6			            MOV DX, SI
+ 0062  B4 01			            MOV AH, 1
+ 0064  CD 32			            INT 32H         ; SET A[3:0] TO THE NUMBER OF TRIALS TAKEN
+ 0066  74 0B			            JZ G_EQ         ; IF GUESS EQUALS TO THE TRUE RESULT
+ 0068  72 11			            JC G_LT         ; IF GUESS IS LESS THAN THE TRUE RESULT
+ 006A  32 E4			G_GT:       XOR AH, AH      
+ 006C  BA 8000			            MOV DX, 8000H   ; YLED7=1
+ 006F  CD 30			            INT 30H
+ 0071  EB C9			            JMP G_INPUT
+ 0073  32 E4			G_EQ:       XOR AH, AH
+ 0075  33 D2			            XOR DX, DX      ; ALL LIGHTS ARE OFF
+ 0077  CD 30			            INT 30H
+ 0079  EB 0F			            JMP NEXT_SESS
+ 007B  BA 0080			G_LT:       MOV DX, 80H     ; GLED7=1
+ 007E  CD 30			            INT 30H
+ 0080  EB BA			            JMP G_INPUT
+ 0082  8B D3			SHOW_RES:   MOV DX, BX      ; SHOW THE TRUE RESULT IMMEDIATELLY AFTER PRESSING 'A'
+ 0084  B4 02			            MOV AH, 2
+ 0086  CD 32			            INT 32H         
+ 0088  EB 00			            JMP NEXT_SESS   ; AND PRESS ANY BUTTON TO ENTER INPUT_SESS AGAIN
+ 008A  32 E4			NEXT_SESS:  XOR AH, AH      ; ENTER A DIGIT 0~A AND ENTER THE NEXT INPUT SESSION
+ 008C  CD 33			            INT 33H         ; ATTAIN THE RESULT AND SAVE TO AL
+ 008E  3C 10			            CMP AL, 10H
+ 0090  72 F8			            JC NEXT_SESS
+ 0092  3C 1B			            CMP AL, 1BH
+ 0094  72 F4			            JC NEXT_SESS
+ 0096  E9 FF67			            JMP INPUT_SESS
+
+ 0099				CODE ENDS
+				    END START
+
+
+
+
+Microsoft (R) Macro Assembler Version 6.11		    11/01/18 20:14:45
+4.5.1.asm						     Symbols 2 - 1
+
+
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+CODE . . . . . . . . . . . . . .	16 Bit	 0099	  Para	  Private 'CODE'	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+GUESS_SESS . . . . . . . . . . .	L Near	 002B	  CODE	
+G_EQ . . . . . . . . . . . . . .	L Near	 0073	  CODE	
+G_GT . . . . . . . . . . . . . .	L Near	 006A	  CODE	
+G_INPUT  . . . . . . . . . . . .	L Near	 003C	  CODE	
+G_LT . . . . . . . . . . . . . .	L Near	 007B	  CODE	
+INPUT_SESS . . . . . . . . . . .	L Near	 0000	  CODE	
+NEXT_SESS  . . . . . . . . . . .	L Near	 008A	  CODE	
+SAVE_RES . . . . . . . . . . . .	L Near	 0011	  CODE	
+SHOW_RES . . . . . . . . . . . .	L Near	 0082	  CODE	
+START  . . . . . . . . . . . . .	L Near	 0000	  CODE	
+
+	   0 Warnings
+	   0 Errors
