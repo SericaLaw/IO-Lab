@@ -1,0 +1,64 @@
+Microsoft (R) Macro Assembler Version 6.11		    11/01/18 09:47:48
+4.3.2.asm						     Page 1 - 1
+
+
+				; INVALID AT PRESENT
+				; THE PROBLEM IS HOW TO MAINTAIN KEYBOARD INPUT?
+				; DO WE GET THE SIGNAL AT ONCE WHEN AN INPUT IS PRESENTED? OR WHAT?
+				; LET US ASSUME THAT ALL IMPUTS CONSIST OF 4 SINGLE-NUMBERS
+ 0000				CODE SEGMENT 'CODE'
+				    ASSUME CS:CODE
+ 0000  B9 0004			START:      MOV CX, 4
+ 0003  BA 0000			            MOV DX, 0       ; SAVE THE RESULT OF INPUT TO DX
+ 0006  B4 00			INPUT:      MOV AH, 0
+ 0008  CD 33			            INT 33H         ; READ THE CURRENT INPUT AND SAVE TO AL
+ 000A  A8 10			            TEST AL, 10H    ; TEST IF D4=1 (VALID INPUT). IF INVALID, JMP TO INPUT AGAIN
+ 000C  74 F8			            JZ INPUT        
+
+ 000E  3C 0A			            CMP AL, 10      ; IF AL HAS AN INPUT, COMPARE AL WITH 10, IF CF=0, AL>=10. IF AL >=10, THEN IT'S AN INVALID INPUT
+ 0010  73 18			            JNC EXCEPTION   
+ 0012  83 F9 10			            CMP CX, 16      ;IF CX == 16, THEN THIS IS THE LAST LOOP. JMP TO OUTPUT.
+ 0015  EB 09			            JMP OUTPUT
+				            
+ 0017  D3 C8			            ROR AX, CL
+ 0019  0B D0			            OR DX, AX
+ 001B  83 C1 04			            ADD CX, 4       ; ADD UP CX
+ 001E  EB E6			            JMP INPUT
+
+ 0020  D3 C8			OUTPUT:     ROR AX, CL
+ 0022  0B D0			            OR DX, AX
+ 0024  B4 01			            MOV AH, 1
+ 0026  CD 32			            INT 32H
+ 0028  EB D6			            JMP START
+
+ 002A  B4 01			EXCEPTION:  MOV AH, 1       ; SET A[3:0] TO 0000
+ 002C  BA 0000			            MOV DX, 0
+ 002F  CD 32			            INT 32H
+ 0031  EB CD			            JMP START
+ 0033				CODE ENDS
+				    END START
+
+Microsoft (R) Macro Assembler Version 6.11		    11/01/18 09:47:48
+4.3.2.asm						     Symbols 2 - 1
+
+
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+CODE . . . . . . . . . . . . . .	16 Bit	 0033	  Para	  Private 'CODE'	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+EXCEPTION  . . . . . . . . . . .	L Near	 002A	  CODE	
+INPUT  . . . . . . . . . . . . .	L Near	 0006	  CODE	
+OUTPUT . . . . . . . . . . . . .	L Near	 0020	  CODE	
+START  . . . . . . . . . . . . .	L Near	 0000	  CODE	
+
+	   0 Warnings
+	   0 Errors

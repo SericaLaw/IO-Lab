@@ -1,0 +1,105 @@
+Microsoft (R) Macro Assembler Version 6.11		    11/01/18 10:36:41
+4.3.3.asm						     Page 1 - 1
+
+
+ 0000				DATA SEGMENT 'DATA'
+ 0000 000A			    DIVIDER DW 10
+ 0002				DATA ENDS
+
+
+ 0000				CODE SEGMENT 'CODE'
+				    ASSUME CS:CODE
+ 0000  32 E4			START:      XOR AH, AH
+ 0002  B0 0F			            MOV AL,0FH      ; Serica: 设置数码管d3~d0允许显示
+ 0004  CD 32			            INT 32H         ; Serica: 设置数码管d3~d0允许显示
+ 0006  32 C0			            XOR AL,AL       ; Serica: AL清零
+ 0008  CD 31			            INT 31H         ; SAVE (A,B)->(DH,DL)
+ 000A  32 E4			INPUT:      XOR AH, AH
+ 000C  CD 33			            INT 33H         ; READ THE CURRENT INPUT AND SAVE TO AL
+				            ;TEST AL, 10H    ; IF AL[4]=0, THERE IS NO INPUT, AND WE WAIT FOR AN INPUT AGAIN
+				            ;JZ INPUT    
+				            ;TEST AL, 0FFH   ; IF AL = 0, INPUT IS INVALID 
+				            ;JZ EXCEPTION
+				            ;CMP AL, 4       ; IF AL >=4, INPUT IS INVALID (CF=0)
+				            ;JNC EXCEPTION
+ 000E  3C 13			            CMP AL, 10011B       ; IF AL==10011B, MULTIPLICATION  (CF=0,ZF=0)
+ 0010  74 24			            JZ MULTIPLICATION
+ 0012  3C 12			            CMP AL, 10010B
+ 0014  74 15			            JZ SUBTRACTION
+ 0016  3C 11			            CMP AL, 10001B
+ 0018  74 02			            JZ ADDITION
+ 001A  EB E4			            JMP START ; Serica: 除了上面三种情况，其余输入都是非法的，直接返回START
+ 001C  8A CE			ADDITION:   MOV CL, DH ; A的�?�放入CL�?
+ 001E  83 E2 0F			            AND DX, 0FH ; Serica: not AND DX, 0FFH DX�?8位清�?
+ 0021  03 D1			            ADD DX, CX      ; SAVE THE RESULT TO DX STILL
+ 0023  81 FA 2710		            CMP DX, 10000   ; Serica: 计算结果�?10000比较
+ 0027  73 1A			            JNC EEE   ; CF=0，即(DX)>=10000(>9999) 显示E
+ 0029  EB 2A			            JMP OUTPUT
+ 002B  8A CE			SUBTRACTION:    MOV CL, DH
+ 002D  83 E2 0F			                AND DX, 0FH
+ 0030  2B D1			                SUB DX, CX
+ 0032  72 0F			                JC EEE
+ 0034  EB 1F			                JMP OUTPUT
+ 0036  8A C6			MULTIPLICATION: MOV AL, DH
+				                ; AND DX, 0FFH Serica: not necessary
+ 0038  F6 E2			                MUL DL
+ 003A  3D 2710			                CMP AX, 10000   ; COMPARE AX AND 10000. IF AX > 9999(CF=0), JUMP TO EEE
+ 003D  73 04			                JNC EEE
+ 003F  8B D0			                MOV DX, AX
+ 0041  EB 12			                JMP OUTPUT
+ 0043  BA EEEE			EEE:        MOV DX, 0EEEEH
+ 0046  B4 01			            MOV AH, 1   ; Serica：是显示到数码管上orz
+ 0048  CD 32			            INT 32H     ; Serica：是显示到数码管上orz
+ 004A  EB B4			            JMP START
+ 004C  BA FFFF			EXCEPTION:  MOV DX, 0FFFFH
+ 004F  B4 00			            MOV AH, 0
+ 0051  CD 30			            INT 30H         ; PRINT FFFF, INDICATING AN END
+ 0053  EB B5			            JMP INPUT       ; JUMP TO INPUT AGAIN
+
+ 0055  8B C2			OUTPUT: MOV AX, DX           
+ 0057  B1 00			        MOV CL, 0           ; THE NUMER TO ROTATE
+ 0059  BB 0000			        MOV BX, 0           ; SET BX TO 0. THE FINAL ANS IS SAVED TO [BX]
+ 005C  B5 0A			TRANS:  MOV CH, 10
+ 005E  F6 F5			        DIV CH              ; AX STORES THE RESULT WHILE DX STORES THE REMAINDERH. NOTE THAT THE RESULT HAS AT MOST 10
+ 0060  D3 E2			        SAL DX, CL          ; SHIFT DX TO THE LEFT 0/4/8/12BITS
+ 0062  0B DA			        OR  BX, DX          ; SAVE THE RESULT TO [BX]
+ 0064  80 C1 04			        ADD CL, 4           ; NEXT TIME, SHIFT 4BITS MORE
+ 0067  A9 FFFF			        TEST AX, 0FFFFH      ; TEST IF THERE ARE NO RESULTS
+ 006A  75 F0			        JNZ TRANS           ; IF THE RESULT IS 0, THEN LOOP ENDS
+ 006C  B4 01			        MOV AH, 1
+ 006E  8B D3			        MOV DX, BX
+ 0070  CD 32			        INT 32H
+ 0072  EB 8C			        JMP START
+ 0074				CODE ENDS
+				    END START
+Microsoft (R) Macro Assembler Version 6.11		    11/01/18 10:36:41
+4.3.3.asm						     Symbols 2 - 1
+
+
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+CODE . . . . . . . . . . . . . .	16 Bit	 0074	  Para	  Private 'CODE'	
+DATA . . . . . . . . . . . . . .	16 Bit	 0002	  Para	  Private 'DATA'	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+ADDITION . . . . . . . . . . . .	L Near	 001C	  CODE	
+DIVIDER  . . . . . . . . . . . .	Word	 0000	  DATA	
+EEE  . . . . . . . . . . . . . .	L Near	 0043	  CODE	
+EXCEPTION  . . . . . . . . . . .	L Near	 004C	  CODE	
+INPUT  . . . . . . . . . . . . .	L Near	 000A	  CODE	
+MULTIPLICATION . . . . . . . . .	L Near	 0036	  CODE	
+OUTPUT . . . . . . . . . . . . .	L Near	 0055	  CODE	
+START  . . . . . . . . . . . . .	L Near	 0000	  CODE	
+SUBTRACTION  . . . . . . . . . .	L Near	 002B	  CODE	
+TRANS  . . . . . . . . . . . . .	L Near	 005C	  CODE	
+
+	   0 Warnings
+	   0 Errors
