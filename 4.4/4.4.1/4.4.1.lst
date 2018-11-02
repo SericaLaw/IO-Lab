@@ -1,0 +1,121 @@
+Microsoft (R) Macro Assembler Version 6.11		    11/02/18 10:13:32
+4.4.1.asm						     Page 1 - 1
+
+
+				ASSUME DS:DATA, CS:CODE
+ 0000				DATA SEGMENT
+ 0000  0008 [			    INPUT_STR DB 8 DUP(?)
+        00
+       ]
+ 0008				DATA ENDS
+
+ 0000				CODE SEGMENT
+ 0000				START:
+ 0000				INIT_DISPLAY:
+ 0000  B0 FF			    MOV AL, 0FFH
+ 0002  32 E4			    XOR AH, AH
+ 0004  CD 32			    INT 32H
+ 0006				INIT_REGS:
+ 0006  8D 36 0000 R		    LEA SI, INPUT_STR
+ 000A  33 DB			    XOR BX, BX      
+ 000C  33 D2			    XOR DX, DX      ; DX:BX STORES THE DISPLAY DATA
+ 000E  B9 0008			    MOV CX, 8       ; USE CX AS LOOP COUNTER
+ 0011				LOOP_READ_INPUT:
+ 0011  32 E4			    XOR AH, AH
+ 0013  CD 33			    INT 33H         ; AL STORES THE INPUT
+ 0015  A8 10			    TEST AL, 10H
+ 0017  74 F8			    JZ LOOP_READ_INPUT   ; IF THERE IS NO INPUT, THEN KEEP READING
+ 0019  24 0F			    AND AL, 0FH     ; ELSE, CLEAR STATUS BIT
+ 001B  88 04			    MOV [SI], AL    ; SAVE DATA TO MEM
+ 001D  46			    INC SI
+ 001E				PREPARE_DISPLAY_DATA:
+ 001E  51			    PUSH CX         ; SAVE LOOP COUNT
+ 001F  B1 04			    MOV CL, 4       ; SHIFT LEFT DX:BX
+ 0021  D3 E2			    SHL DX, CL
+ 0023  8A EF			    MOV CH, BH
+ 0025  D3 E3			    SHL BX, CL
+ 0027  D2 ED			    SHR CH, CL
+ 0029  0A D5			    OR DL, CH
+ 002B  0A D8			    OR BL, AL       ; SAVE NEW INPUT TO (DX:BX)[3:0]
+ 002D				DISPLAY_INPUT:
+ 002D  B4 02			    MOV AH, 2
+ 002F  CD 32			    INT 32H ; DISPLAY A7~A4
+ 0031  87 D3			    XCHG DX, BX
+ 0033  FE CC			    DEC AH
+ 0035  CD 32			    INT 32H ; DISPLAY A3~A0
+ 0037  87 D3			    XCHG DX, BX
+ 0039				LOOP_CONTROL:
+ 0039  59			    POP CX
+ 003A  E2 D5			    LOOP LOOP_READ_INPUT    ; END OF LOOP
+ 003C				JUDGE_PALINDROME:
+ 003C  E8 0006			    CALL IS_PALINDROME
+ 003F				OUTPUT_RESULT:
+ 003F  32 E4			    XOR AH, AH  ; SHOW RESULT ON LED
+ 0041  CD 30			    INT 30H     ; SHOW RESULT ON LED
+ 0043  EB BB			    JMP START
+
+
+ 0045				IS_PALINDROME PROC
+ 0045				IS_PALINDROME_LOOP_INIT:
+ 0045  B9 0004			    MOV CX, 4
+ 0048  8D 36 0000 R		    LEA SI, INPUT_STR   ; SI POINTS TO THE HEAD OF INPUT_STR
+ 004C  8B FE			    MOV DI, SI  
+ 004E  83 C7 07			    ADD DI, 7           ; DI POINTS TO THE TAIL OF INPUT_STR
+ 0051				IS_PALINDROME_LOOP_BODY:
+ 0051  8A 04			    MOV AL, BYTE PTR[SI]
+ 0053  3A 05			    CMP AL, BYTE PTR[DI]
+ 0055  75 08			    JNZ IS_PALINDROME_FALSE
+ 0057  46			    INC SI
+ 0058  4F			    DEC DI
+ 0059  E2 F6			    LOOP IS_PALINDROME_LOOP_BODY
+ 005B				IS_PALINDROME_TRUE:
+ 005B  BA 0080			    MOV DX, 0080H   ; IS PALINDROME, LIT GLED7
+ 005E  C3			    RET
+ 005F				IS_PALINDROME_FALSE:
+ 005F  BA 8000			    MOV DX, 8000H   ; IS NOT PALINDROME, LIT YLED7
+ 0062  C3			    RET
+ 0063				IS_PALINDROME ENDP
+ 0063				CODE ENDS
+				    END START
+Microsoft (R) Macro Assembler Version 6.11		    11/02/18 10:13:32
+4.4.1.asm						     Symbols 2 - 1
+
+
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+CODE . . . . . . . . . . . . . .	16 Bit	 0063	  Para	  Private 
+DATA . . . . . . . . . . . . . .	16 Bit	 0008	  Para	  Private 
+
+
+Procedures,  parameters and locals:
+
+                N a m e                 Type     Value    Attr
+
+IS_PALINDROME  . . . . . . . . .	P Near	 0045	  CODE	Length= 001E Private
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+DISPLAY_INPUT  . . . . . . . . .	L Near	 002D	  CODE	
+INIT_DISPLAY . . . . . . . . . .	L Near	 0000	  CODE	
+INIT_REGS  . . . . . . . . . . .	L Near	 0006	  CODE	
+INPUT_STR  . . . . . . . . . . .	Byte	 0000	  DATA	
+IS_PALINDROME_FALSE  . . . . . .	L Near	 005F	  CODE	
+IS_PALINDROME_LOOP_BODY  . . . .	L Near	 0051	  CODE	
+IS_PALINDROME_LOOP_INIT  . . . .	L Near	 0045	  CODE	
+IS_PALINDROME_TRUE . . . . . . .	L Near	 005B	  CODE	
+JUDGE_PALINDROME . . . . . . . .	L Near	 003C	  CODE	
+LOOP_CONTROL . . . . . . . . . .	L Near	 0039	  CODE	
+LOOP_READ_INPUT  . . . . . . . .	L Near	 0011	  CODE	
+OUTPUT_RESULT  . . . . . . . . .	L Near	 003F	  CODE	
+PREPARE_DISPLAY_DATA . . . . . .	L Near	 001E	  CODE	
+START  . . . . . . . . . . . . .	L Near	 0000	  CODE	
+
+	   0 Warnings
+	   0 Errors
