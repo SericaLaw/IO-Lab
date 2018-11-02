@@ -4,8 +4,10 @@ DATA ENDS
 
 
 CODE SEGMENT 'CODE'
-    ASSUME CS:CODE
-START:      XOR AH, AH
+    ASSUME CS:CODE, DS:DATA
+START:      MOV AX, 0080H
+            MOV DS, AX
+            XOR AX, AX
             MOV AL,0FH      ; Serica: 设置数码管d3~d0允许显示
             INT 32H         ; Serica: 设置数码管d3~d0允许显示
             XOR AL,AL       ; Serica: AL清零
@@ -25,14 +27,14 @@ INPUT:      XOR AH, AH
             CMP AL, 10001B
             JZ ADDITION
             JMP START ; Serica: 除了上面三种情况，其余输入都是非法的，直接返回START
-ADDITION:   MOV CL, DH ; A的�?�放入CL�??
-            AND DX, 0FH ; Serica: not AND DX, 0FFH DX�??8位清�??
+ADDITION:   MOV CL, DH ; STORE THE VALUE OF NUMBER A INTO CL
+            AND DX, 0FFH ; 
             ADD DX, CX      ; SAVE THE RESULT TO DX STILL
-            CMP DX, 10000   ; Serica: 计算结果�??10000比较
-            JNC EEE   ; CF=0，即(DX)>=10000(>9999) 显示E
+            CMP DX, 10000   ; Serica: COMPARE THE RESULT WITH 10000
+            JNC EEE   ; CF=0, => (DX)>=10000(>9999) => DISPLAY E
             JMP OUTPUT
 SUBTRACTION:    MOV CL, DH
-                AND DX, 0FH
+                AND DX, 0FFH
                 SUB DX, CX
                 JC EEE
                 JMP OUTPUT

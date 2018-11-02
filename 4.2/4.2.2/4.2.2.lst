@@ -1,17 +1,17 @@
-Microsoft (R) Macro Assembler Version 6.11		    10/31/18 17:13:53
+Microsoft (R) Macro Assembler Version 6.11		    11/02/18 13:08:43
 4.2.2.asm						     Page 1 - 1
 
 
- 0000				CODE SEGMENT
-				ASSUME CS:CODE
+ 0000				CODE SEGMENT 'CODE'
+				    ASSUME CS:CODE
  0000				START:
-				; 从拨码开关输入两�?8位二进制数（A、B�?
+				; 从拨码开关输入两�??8位二进制数（A、B�??
 				; 将这两个数的和以16进制数形式输出到数码管上
-				; A等于SW15~SW8的�??
-				; B等于SW7~SW0的�??
+				; A等于SW15~SW8的�??
+				; B等于SW7~SW0的�??
  0000  B4 00			    MOV AH, 0
  0002  CD 31			    INT 31H     ; read input
- 0004  8A EE			    MOV CH, DH  ; copy DX to CX
+ 0004  8A EE			    MOV CH, DH  ; copy DH to CH
  0006  02 D6			    ADD DL, DH  ; add two 8-bit digits
  0008  80 D6 00			    ADC DH, 0   ; add carry to DH
  000B  2A F5			    SUB DH, CH  ; figure out whether there's a carry
@@ -23,7 +23,7 @@ Microsoft (R) Macro Assembler Version 6.11		    10/31/18 17:13:53
  0017  EB E7			    JMP START
  0019				CODE ENDS
 				    END START
-Microsoft (R) Macro Assembler Version 6.11		    10/31/18 17:13:53
+Microsoft (R) Macro Assembler Version 6.11		    11/02/18 13:08:43
 4.2.2.asm						     Symbols 2 - 1
 
 
@@ -33,7 +33,7 @@ Segments and Groups:
 
                 N a m e                 Size     Length   Align   Combine Class
 
-CODE . . . . . . . . . . . . . .	16 Bit	 0019	  Para	  Private 
+CODE . . . . . . . . . . . . . .	16 Bit	 0019	  Para	  Private 'CODE'	
 
 
 Symbols:

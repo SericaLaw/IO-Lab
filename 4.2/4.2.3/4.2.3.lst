@@ -1,15 +1,14 @@
-Microsoft (R) Macro Assembler Version 6.11		    10/31/18 17:14:36
+Microsoft (R) Macro Assembler Version 6.11		    11/02/18 13:09:21
 4.2.3.asm						     Page 1 - 1
 
 
-				ASSUME DS:DATA, CS:CODE
-
- 0000				DATA SEGMENT
+ 0000				DATA SEGMENT 'DATA'
  0000 00 01 04 09 10 19		    TABLE DB 0, 1, 4, 9, 16, 25, 36, 49, 64, 81
        24 31 40 51
  000A				DATA ENDS
 
- 0000				CODE SEGMENT
+ 0000				CODE SEGMENT 'CODE'
+				    ASSUME DS:DATA, CS:CODE ;DAE: BY DEFAULT WE PUT IT HERE? EVEN THOUGH I DUNNO THE REASON...
  0000				START:
  0000  B8 0080			    MOV AX, 0080H   ; DATA segment starts from 0080H
  0003  8E D8			    MOV DS, AX  ; reset DS register
@@ -25,7 +24,7 @@ Microsoft (R) Macro Assembler Version 6.11		    10/31/18 17:14:36
  0017  EB E7			    JMP START
  0019				CODE ENDS
 				    END START
-Microsoft (R) Macro Assembler Version 6.11		    10/31/18 17:14:36
+Microsoft (R) Macro Assembler Version 6.11		    11/02/18 13:09:21
 4.2.3.asm						     Symbols 2 - 1
 
 
@@ -35,8 +34,8 @@ Segments and Groups:
 
                 N a m e                 Size     Length   Align   Combine Class
 
-CODE . . . . . . . . . . . . . .	16 Bit	 0019	  Para	  Private 
-DATA . . . . . . . . . . . . . .	16 Bit	 000A	  Para	  Private 
+CODE . . . . . . . . . . . . . .	16 Bit	 0019	  Para	  Private 'CODE'	
+DATA . . . . . . . . . . . . . .	16 Bit	 000A	  Para	  Private 'DATA'	
 
 
 Symbols:
