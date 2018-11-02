@@ -3,7 +3,7 @@ CODE SEGMENT 'CODE'
 START:  
 INPUT_SESS: MOV AL, 0FFH     ; SET AL TO 1111 1111 B
             XOR AH, AH      ; SET AH=0
-            INT 32H         ; ENABLE A[5:0]
+            INT 32H         ; ENABLE A[7:0]
             MOV DX, 0FFFFH  
             MOV AH, 1       
             INT 32H         ; SET A[3:0] TO FFFF
@@ -24,6 +24,7 @@ SAVE_RES:   XOR AH, AH
             JMP SAVE_RES
 
 GUESS_SESS: MOV BX, DX      ; REMOVE THE RESULT FROM REGISTER DX TO REGISTER BX(BL)
+            AND BX, 0FH     ; SERICA: ONLY A5~A4 IS VALID INPUT
             MOV DX, 0FFFFH  ; SET A[7:4] TO FFFF
             MOV AH, 2
             INT 32H         ; HIDE THE TRUE RESULT AND SHOW FFFF INSTEAD ON A[7:4]
@@ -52,7 +53,7 @@ G_INPUT:    MOV CX, 2
             OR DL, AL       ; SAVE DIGIT
             LOOP G_INPUT
             INC SI
-            CMP DX, BX
+            CMP DL, BL      ; SERICA: SHOULD COMPARE BL WITH DL
             MOV DX, SI
             MOV AH, 1
             INT 32H         ; SET A[3:0] TO THE NUMBER OF TRIALS TAKEN
@@ -72,7 +73,8 @@ G_LT:       MOV DX, 80H     ; GLED7=1
 SHOW_RES:   MOV DX, BX      ; SHOW THE TRUE RESULT IMMEDIATELLY AFTER PRESSING 'A'
             MOV AH, 2
             INT 32H         
-            JMP NEXT_SESS   ; AND PRESS ANY BUTTON TO ENTER INPUT_SESS AGAIN
+            ; SERICA: NOT NECESSARY
+            ; JMP NEXT_SESS   ; AND PRESS ANY BUTTON TO ENTER INPUT_SESS AGAIN
 NEXT_SESS:  XOR AH, AH      ; ENTER A DIGIT 0~A AND ENTER THE NEXT INPUT SESSION
             INT 33H         ; ATTAIN THE RESULT AND SAVE TO AL
             CMP AL, 10H
