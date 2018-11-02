@@ -1,4 +1,4 @@
-Microsoft (R) Macro Assembler Version 6.11		    11/02/18 13:10:36
+Microsoft (R) Macro Assembler Version 6.11		    11/02/18 20:42:54
 4.3.3.asm						     Page 1 - 1
 
 
@@ -25,7 +25,7 @@ Microsoft (R) Macro Assembler Version 6.11		    11/02/18 13:10:36
 				            ;CMP AL, 4       ; IF AL >=4, INPUT IS INVALID (CF=0)
 				            ;JNC EXCEPTION
  0013  3C 13			            CMP AL, 10011B       ; IF AL==10011B, MULTIPLICATION  (CF=0,ZF=0)
- 0015  74 26			            JZ MULTIPLICATION
+ 0015  74 2C			            JZ MULTIPLICATION
  0017  3C 12			            CMP AL, 10010B
  0019  74 16			            JZ SUBTRACTION
  001B  3C 11			            CMP AL, 10001B
@@ -35,46 +35,59 @@ Microsoft (R) Macro Assembler Version 6.11		    11/02/18 13:10:36
  0023  81 E2 00FF		            AND DX, 0FFH ; 
  0027  03 D1			            ADD DX, CX      ; SAVE THE RESULT TO DX STILL
  0029  81 FA 2710		            CMP DX, 10000   ; Serica: COMPARE THE RESULT WITH 10000
- 002D  73 1B			            JNC EEE   ; CF=0, => (DX)>=10000(>9999) => DISPLAY E
- 002F  EB 2B			            JMP OUTPUT
+ 002D  73 21			            JNC EEE   ; CF=0, => (DX)>=10000(>9999) => DISPLAY E
+ 002F  EB 31			            JMP OUTPUT
  0031  8A CE			SUBTRACTION:    MOV CL, DH
  0033  81 E2 00FF		                AND DX, 0FFH
- 0037  2B D1			                SUB DX, CX
- 0039  72 0F			                JC EEE
- 003B  EB 1F			                JMP OUTPUT
- 003D  8A C6			MULTIPLICATION: MOV AL, DH
+ 0037  81 E1 00FF		                AND CX, 0FFH
+ 003B  2B CA			                SUB CX, DX
+ 003D  8B D1			                MOV DX, CX
+ 003F  72 0F			                JC EEE
+ 0041  EB 1F			                JMP OUTPUT
+ 0043  8A C6			MULTIPLICATION: MOV AL, DH
 				                ; AND DX, 0FFH Serica: not necessary
- 003F  F6 E2			                MUL DL
- 0041  3D 2710			                CMP AX, 10000   ; COMPARE AX AND 10000. IF AX > 9999(CF=0), JUMP TO EEE
- 0044  73 04			                JNC EEE
- 0046  8B D0			                MOV DX, AX
- 0048  EB 12			                JMP OUTPUT
- 004A  BA EEEE			EEE:        MOV DX, 0EEEEH
- 004D  B4 01			            MOV AH, 1   ; Serica：是显示到数码管上orz
- 004F  CD 32			            INT 32H     ; Serica：是显示到数码管上orz
- 0051  EB AD			            JMP START
- 0053  BA FFFF			EXCEPTION:  MOV DX, 0FFFFH
- 0056  B4 00			            MOV AH, 0
- 0058  CD 30			            INT 30H         ; PRINT FFFF, INDICATING AN END
- 005A  EB B3			            JMP INPUT       ; JUMP TO INPUT AGAIN
+ 0045  F6 E2			                MUL DL
+ 0047  3D 2710			                CMP AX, 10000   ; COMPARE AX AND 10000. IF AX > 9999(CF=0), JUMP TO EEE
+ 004A  73 04			                JNC EEE
+ 004C  8B D0			                MOV DX, AX
+ 004E  EB 12			                JMP OUTPUT
+ 0050  BA EEEE			EEE:        MOV DX, 0EEEEH
+ 0053  B4 01			            MOV AH, 1   ; Serica：是显示到数码管上orz
+ 0055  CD 32			            INT 32H     ; Serica：是显示到数码管上orz
+ 0057  EB A7			            JMP START
+ 0059  BA FFFF			EXCEPTION:  MOV DX, 0FFFFH
+ 005C  B4 00			            MOV AH, 0
+ 005E  CD 30			            INT 30H         ; PRINT FFFF, INDICATING AN END
+ 0060  EB AD			            JMP INPUT       ; JUMP TO INPUT AGAIN
 
- 005C  8B C2			OUTPUT: MOV AX, DX           
- 005E  B1 00			        MOV CL, 0           ; THE NUMER TO ROTATE
- 0060  BB 0000			        MOV BX, 0           ; SET BX TO 0. THE FINAL ANS IS SAVED TO [BX]
- 0063  B5 0A			        MOV CH, 10          ; CH SHOULD ONLY BE SET ONCE DURING THE LOOP. OTHERWISE IT'S A WASTE OF TIME
- 0065  F6 F5			TRANS:  DIV CH              ; AX STORES THE RESULT WHILE DX STORES THE REMAINDERH. NOTE THAT THE RESULT HAS AT MOST 10
- 0067  D3 E2			        SAL DX, CL          ; SHIFT DX TO THE LEFT 0/4/8/12BITS
- 0069  0B DA			        OR  BX, DX          ; SAVE THE RESULT TO [BX]
- 006B  80 C1 04			        ADD CL, 4           ; NEXT TIME, SHIFT 4BITS MORE
- 006E  A9 FFFF			        TEST AX, 0FFFFH      ; TEST IF THERE ARE NO RESULTS
- 0071  75 F2			        JNZ TRANS           ; IF THE RESULT IS 0, THEN LOOP ENDS
- 0073  B4 01			        MOV AH, 1
- 0075  8B D3			        MOV DX, BX
- 0077  CD 32			        INT 32H
- 0079  EB 85			        JMP START
- 007B				CODE ENDS
+ 0062				OUTPUT: 
+ 0062  8B C2			        MOV AX, DX           
+ 0064  B1 00			        MOV CL, 0           ; THE NUMER TO ROTATE
+ 0066  BB 0000			        MOV BX, 0           ; SET BX TO 0. THE FINAL ANS IS SAVED TO [BX]
+ 0069  BE 000A			        MOV SI, 10          ; SI SHOULD ONLY BE SET ONCE DURING THE LOOP. OTHERWISE IT'S A WASTE OF TIME
+				        ; MOV AH, 1
+				        ; INT 32H
+				        ; MOV AX, DX
+ 006C  33 D2			TRANS:  XOR DX, DX
+ 006E  F7 F6			        DIV SI              ; AX STORES THE RESULT WHILE DX STORES THE REMAINDERH. NOTE THAT THE RESULT HAS AT MOST 10
+ 0070  D3 E2			        SAL DX, CL          ; SHIFT DX TO THE LEFT 0/4/8/12BITS
+ 0072  0B DA			        OR  BX, DX          ; SAVE THE RESULT TO [BX]
+ 0074  80 C1 04			        ADD CL, 4           ; NEXT TIME, SHIFT 4BITS MORE
+ 0077  83 F8 00			        CMP AX, 0      ; TEST IF THERE ARE NO RESULTS
+				        ; PUSH AX
+				        ; MOV DX, 101H
+				        ; MOV AH, 1
+				        ; INT 32H
+				        ; POP AX
+ 007A  75 F0			        JNZ TRANS           ; IF THE RESULT IS 0, THEN LOOP ENDS
+				        ; MOV DX, 123H
+ 007C  B4 01			        MOV AH, 1
+ 007E  8B D3			        MOV DX, BX
+ 0080  CD 32			        INT 32H
+ 0082  E9 FF7B			        JMP START
+ 0085				CODE ENDS
 				    END START
-Microsoft (R) Macro Assembler Version 6.11		    11/02/18 13:10:36
+Microsoft (R) Macro Assembler Version 6.11		    11/02/18 20:42:54
 4.3.3.asm						     Symbols 2 - 1
 
 
@@ -84,7 +97,7 @@ Segments and Groups:
 
                 N a m e                 Size     Length   Align   Combine Class
 
-CODE . . . . . . . . . . . . . .	16 Bit	 007B	  Para	  Private 'CODE'	
+CODE . . . . . . . . . . . . . .	16 Bit	 0085	  Para	  Private 'CODE'	
 DATA . . . . . . . . . . . . . .	16 Bit	 0002	  Para	  Private 'DATA'	
 
 
@@ -94,14 +107,14 @@ Symbols:
 
 ADDITION . . . . . . . . . . . .	L Near	 0021	  CODE	
 DIVIDER  . . . . . . . . . . . .	Word	 0000	  DATA	
-EEE  . . . . . . . . . . . . . .	L Near	 004A	  CODE	
-EXCEPTION  . . . . . . . . . . .	L Near	 0053	  CODE	
+EEE  . . . . . . . . . . . . . .	L Near	 0050	  CODE	
+EXCEPTION  . . . . . . . . . . .	L Near	 0059	  CODE	
 INPUT  . . . . . . . . . . . . .	L Near	 000F	  CODE	
-MULTIPLICATION . . . . . . . . .	L Near	 003D	  CODE	
-OUTPUT . . . . . . . . . . . . .	L Near	 005C	  CODE	
+MULTIPLICATION . . . . . . . . .	L Near	 0043	  CODE	
+OUTPUT . . . . . . . . . . . . .	L Near	 0062	  CODE	
 START  . . . . . . . . . . . . .	L Near	 0000	  CODE	
 SUBTRACTION  . . . . . . . . . .	L Near	 0031	  CODE	
-TRANS  . . . . . . . . . . . . .	L Near	 0065	  CODE	
+TRANS  . . . . . . . . . . . . .	L Near	 006C	  CODE	
 
 	   0 Warnings
 	   0 Errors

@@ -1,4 +1,4 @@
-Microsoft (R) Macro Assembler Version 6.11		    11/02/18 10:41:42
+Microsoft (R) Macro Assembler Version 6.11		    11/02/18 21:02:09
 4.4.2.asm						     Page 1 - 1
 
 
@@ -15,32 +15,34 @@ Microsoft (R) Macro Assembler Version 6.11		    11/02/18 10:41:42
  000E  8B C8			        MOV CX, AX
  0010  B8 0001			        MOV AX, 1
 				        ;MOV DX, 1       ; THE RESULT WOULD BE SAVED DIRECTLY TO DX
- 0013  F6 E1			FAC:    MUL CL
+ 0013				FAC:    
+ 0013  F7 E1			        MUL CX
  0015  E2 FC			        LOOP FAC
- 0017  B5 0A			        MOV CH, 10
- 0019  B1 04			        MOV CL, 4
- 001B  BB 0000			        MOV BX, 0
- 001E  F6 F5			OUTPUT: DIV CH
- 0020  D3 E2			        SAL DX, CL
- 0022  0B DA			        OR BX, DX
- 0024  80 C1 04			        ADD CL, 4
- 0027  A9 FFFF			        TEST AX, 0FFFFH
- 002A  75 F2			        JNZ OUTPUT
- 002C  B0 0F			        MOV AL, 0FH
- 002E  B4 00			        MOV AH, 0
- 0030  CD 32			        INT 32H     ; ENABLE A[3:0] 
- 0032  B4 01			        MOV AH, 1
- 0034  8B D3			        MOV DX, BX
- 0036  CD 32			        INT 32H     ; SHOW THE RESULT
- 0038  EB C6			        JMP START
- 003A				CODE ENDS
+ 0017  BE 000A			        MOV SI, 10
+ 001A  B1 00			        MOV CL, 0
+ 001C  BB 0000			        MOV BX, 0
+ 001F  33 D2			OUTPUT: XOR DX, DX
+ 0021  F7 F6			        DIV SI
+ 0023  D3 E2			        SAL DX, CL
+ 0025  0B DA			        OR BX, DX
+ 0027  80 C1 04			        ADD CL, 4
+ 002A  A9 FFFF			        TEST AX, 0FFFFH
+ 002D  75 F0			        JNZ OUTPUT
+ 002F  B0 0F			        MOV AL, 0FH
+ 0031  B4 00			        MOV AH, 0
+ 0033  CD 32			        INT 32H     ; ENABLE A[3:0] 
+ 0035  B4 01			        MOV AH, 1
+ 0037  8B D3			        MOV DX, BX
+ 0039  CD 32			        INT 32H     ; SHOW THE RESULT
+ 003B  EB C3			        JMP START
+ 003D				CODE ENDS
 				    END START
 
 				        
 
 
 				        
-Microsoft (R) Macro Assembler Version 6.11		    11/02/18 10:41:42
+Microsoft (R) Macro Assembler Version 6.11		    11/02/18 21:02:09
 4.4.2.asm						     Symbols 2 - 1
 
 
@@ -50,7 +52,7 @@ Segments and Groups:
 
                 N a m e                 Size     Length   Align   Combine Class
 
-CODE . . . . . . . . . . . . . .	16 Bit	 003A	  Para	  Private 'CODE'	
+CODE . . . . . . . . . . . . . .	16 Bit	 003D	  Para	  Private 'CODE'	
 
 
 Symbols:
@@ -59,7 +61,7 @@ Symbols:
 
 FAC  . . . . . . . . . . . . . .	L Near	 0013	  CODE	
 INPUT  . . . . . . . . . . . . .	L Near	 0000	  CODE	
-OUTPUT . . . . . . . . . . . . .	L Near	 001E	  CODE	
+OUTPUT . . . . . . . . . . . . .	L Near	 001F	  CODE	
 START  . . . . . . . . . . . . .	L Near	 0000	  CODE	
 
 	   0 Warnings

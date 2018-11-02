@@ -11,12 +11,14 @@ INPUT:  MOV AH, 0
         MOV CX, AX
         MOV AX, 1
         ;MOV DX, 1       ; THE RESULT WOULD BE SAVED DIRECTLY TO DX
-FAC:    MUL CL
+FAC:    
+        MUL CX
         LOOP FAC
-        MOV CH, 10
-        MOV CL, 4
+        MOV SI, 10
+        MOV CL, 0
         MOV BX, 0
-OUTPUT: DIV CH
+OUTPUT: XOR DX, DX
+        DIV SI
         SAL DX, CL
         OR BX, DX
         ADD CL, 4

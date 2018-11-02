@@ -35,7 +35,9 @@ ADDITION:   MOV CL, DH ; STORE THE VALUE OF NUMBER A INTO CL
             JMP OUTPUT
 SUBTRACTION:    MOV CL, DH
                 AND DX, 0FFH
-                SUB DX, CX
+                AND CX, 0FFH
+                SUB CX, DX
+                MOV DX, CX
                 JC EEE
                 JMP OUTPUT
 MULTIPLICATION: MOV AL, DH
@@ -54,16 +56,27 @@ EXCEPTION:  MOV DX, 0FFFFH
             INT 30H         ; PRINT FFFF, INDICATING AN END
             JMP INPUT       ; JUMP TO INPUT AGAIN
 
-OUTPUT: MOV AX, DX           
+OUTPUT: 
+        MOV AX, DX           
         MOV CL, 0           ; THE NUMER TO ROTATE
         MOV BX, 0           ; SET BX TO 0. THE FINAL ANS IS SAVED TO [BX]
-        MOV CH, 10          ; CH SHOULD ONLY BE SET ONCE DURING THE LOOP. OTHERWISE IT'S A WASTE OF TIME
-TRANS:  DIV CH              ; AX STORES THE RESULT WHILE DX STORES THE REMAINDERH. NOTE THAT THE RESULT HAS AT MOST 10
+        MOV SI, 10          ; SI SHOULD ONLY BE SET ONCE DURING THE LOOP. OTHERWISE IT'S A WASTE OF TIME
+        ; MOV AH, 1
+        ; INT 32H
+        ; MOV AX, DX
+TRANS:  XOR DX, DX
+        DIV SI              ; AX STORES THE RESULT WHILE DX STORES THE REMAINDERH. NOTE THAT THE RESULT HAS AT MOST 10
         SAL DX, CL          ; SHIFT DX TO THE LEFT 0/4/8/12BITS
         OR  BX, DX          ; SAVE THE RESULT TO [BX]
         ADD CL, 4           ; NEXT TIME, SHIFT 4BITS MORE
-        TEST AX, 0FFFFH      ; TEST IF THERE ARE NO RESULTS
+        CMP AX, 0      ; TEST IF THERE ARE NO RESULTS
+        ; PUSH AX
+        ; MOV DX, 101H
+        ; MOV AH, 1
+        ; INT 32H
+        ; POP AX
         JNZ TRANS           ; IF THE RESULT IS 0, THEN LOOP ENDS
+        ; MOV DX, 123H
         MOV AH, 1
         MOV DX, BX
         INT 32H
