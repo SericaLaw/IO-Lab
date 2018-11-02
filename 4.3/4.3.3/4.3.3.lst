@@ -1,4 +1,4 @@
-Microsoft (R) Macro Assembler Version 6.11		    11/01/18 10:36:41
+Microsoft (R) Macro Assembler Version 6.11		    11/02/18 10:44:45
 4.3.3.asm						     Page 1 - 1
 
 
@@ -29,10 +29,10 @@ Microsoft (R) Macro Assembler Version 6.11		    11/01/18 10:36:41
  0016  3C 11			            CMP AL, 10001B
  0018  74 02			            JZ ADDITION
  001A  EB E4			            JMP START ; Serica: 除了上面三种情况，其余输入都是非法的，直接返回START
- 001C  8A CE			ADDITION:   MOV CL, DH ; A的�?�放入CL�?
- 001E  83 E2 0F			            AND DX, 0FH ; Serica: not AND DX, 0FFH DX�?8位清�?
+ 001C  8A CE			ADDITION:   MOV CL, DH ; A的�?�放入CL�??
+ 001E  83 E2 0F			            AND DX, 0FH ; Serica: not AND DX, 0FFH DX�??8位清�??
  0021  03 D1			            ADD DX, CX      ; SAVE THE RESULT TO DX STILL
- 0023  81 FA 2710		            CMP DX, 10000   ; Serica: 计算结果�?10000比较
+ 0023  81 FA 2710		            CMP DX, 10000   ; Serica: 计算结果�??10000比较
  0027  73 1A			            JNC EEE   ; CF=0，即(DX)>=10000(>9999) 显示E
  0029  EB 2A			            JMP OUTPUT
  002B  8A CE			SUBTRACTION:    MOV CL, DH
@@ -59,20 +59,20 @@ Microsoft (R) Macro Assembler Version 6.11		    11/01/18 10:36:41
  0055  8B C2			OUTPUT: MOV AX, DX           
  0057  B1 00			        MOV CL, 0           ; THE NUMER TO ROTATE
  0059  BB 0000			        MOV BX, 0           ; SET BX TO 0. THE FINAL ANS IS SAVED TO [BX]
- 005C  B5 0A			TRANS:  MOV CH, 10
- 005E  F6 F5			        DIV CH              ; AX STORES THE RESULT WHILE DX STORES THE REMAINDERH. NOTE THAT THE RESULT HAS AT MOST 10
+ 005C  B5 0A			        MOV CH, 10          ; CH SHOULD ONLY BE SET ONCE DURING THE LOOP. OTHERWISE IT'S A WASTE OF TIME
+ 005E  F6 F5			TRANS:  DIV CH              ; AX STORES THE RESULT WHILE DX STORES THE REMAINDERH. NOTE THAT THE RESULT HAS AT MOST 10
  0060  D3 E2			        SAL DX, CL          ; SHIFT DX TO THE LEFT 0/4/8/12BITS
  0062  0B DA			        OR  BX, DX          ; SAVE THE RESULT TO [BX]
  0064  80 C1 04			        ADD CL, 4           ; NEXT TIME, SHIFT 4BITS MORE
  0067  A9 FFFF			        TEST AX, 0FFFFH      ; TEST IF THERE ARE NO RESULTS
- 006A  75 F0			        JNZ TRANS           ; IF THE RESULT IS 0, THEN LOOP ENDS
+ 006A  75 F2			        JNZ TRANS           ; IF THE RESULT IS 0, THEN LOOP ENDS
  006C  B4 01			        MOV AH, 1
  006E  8B D3			        MOV DX, BX
  0070  CD 32			        INT 32H
  0072  EB 8C			        JMP START
  0074				CODE ENDS
 				    END START
-Microsoft (R) Macro Assembler Version 6.11		    11/01/18 10:36:41
+Microsoft (R) Macro Assembler Version 6.11		    11/02/18 10:44:45
 4.3.3.asm						     Symbols 2 - 1
 
 
@@ -99,7 +99,7 @@ MULTIPLICATION . . . . . . . . .	L Near	 0036	  CODE
 OUTPUT . . . . . . . . . . . . .	L Near	 0055	  CODE	
 START  . . . . . . . . . . . . .	L Near	 0000	  CODE	
 SUBTRACTION  . . . . . . . . . .	L Near	 002B	  CODE	
-TRANS  . . . . . . . . . . . . .	L Near	 005C	  CODE	
+TRANS  . . . . . . . . . . . . .	L Near	 005E	  CODE	
 
 	   0 Warnings
 	   0 Errors

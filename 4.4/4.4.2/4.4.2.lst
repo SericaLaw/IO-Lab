@@ -1,0 +1,66 @@
+Microsoft (R) Macro Assembler Version 6.11		    11/02/18 10:41:42
+4.4.2.asm						     Page 1 - 1
+
+
+ 0000				CODE SEGMENT 'CODE'
+				    ASSUME CS:CODE
+ 0000				START:
+ 0000  B4 00			INPUT:  MOV AH, 0
+ 0002  CD 33			        INT 33H
+ 0004  3C 11			        CMP AL, 10001B  ;IF AL < 10001, CF = 1
+ 0006  72 F8			        JC INPUT
+ 0008  3C 17			        CMP AL, 10111B  ;IF INPUT >= 7, CF= 0
+ 000A  73 F4			        JNC INPUT
+ 000C  24 0F			        AND AL, 0FH
+ 000E  8B C8			        MOV CX, AX
+ 0010  B8 0001			        MOV AX, 1
+				        ;MOV DX, 1       ; THE RESULT WOULD BE SAVED DIRECTLY TO DX
+ 0013  F6 E1			FAC:    MUL CL
+ 0015  E2 FC			        LOOP FAC
+ 0017  B5 0A			        MOV CH, 10
+ 0019  B1 04			        MOV CL, 4
+ 001B  BB 0000			        MOV BX, 0
+ 001E  F6 F5			OUTPUT: DIV CH
+ 0020  D3 E2			        SAL DX, CL
+ 0022  0B DA			        OR BX, DX
+ 0024  80 C1 04			        ADD CL, 4
+ 0027  A9 FFFF			        TEST AX, 0FFFFH
+ 002A  75 F2			        JNZ OUTPUT
+ 002C  B0 0F			        MOV AL, 0FH
+ 002E  B4 00			        MOV AH, 0
+ 0030  CD 32			        INT 32H     ; ENABLE A[3:0] 
+ 0032  B4 01			        MOV AH, 1
+ 0034  8B D3			        MOV DX, BX
+ 0036  CD 32			        INT 32H     ; SHOW THE RESULT
+ 0038  EB C6			        JMP START
+ 003A				CODE ENDS
+				    END START
+
+				        
+
+
+				        
+Microsoft (R) Macro Assembler Version 6.11		    11/02/18 10:41:42
+4.4.2.asm						     Symbols 2 - 1
+
+
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+CODE . . . . . . . . . . . . . .	16 Bit	 003A	  Para	  Private 'CODE'	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+FAC  . . . . . . . . . . . . . .	L Near	 0013	  CODE	
+INPUT  . . . . . . . . . . . . .	L Near	 0000	  CODE	
+OUTPUT . . . . . . . . . . . . .	L Near	 001E	  CODE	
+START  . . . . . . . . . . . . .	L Near	 0000	  CODE	
+
+	   0 Warnings
+	   0 Errors
