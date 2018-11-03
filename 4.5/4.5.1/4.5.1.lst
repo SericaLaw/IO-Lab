@@ -1,0 +1,119 @@
+Microsoft (R) Macro Assembler Version 6.11		    11/03/18 18:45:14
+4.5.1.asm						     Page 1 - 1
+
+
+ 0000				CODE SEGMENT 'CODE'
+				    ASSUME CS:CODE
+ 0000  BA 0000			START:      MOV DX, 0
+ 0003  B1 04			            MOV CL, 4
+ 0005  B4 00			            MOV AH, 0
+ 0007  CD 30			            INT 30H         ; DISABLE ALL THE LIGHTS
+ 0009  B4 00			IN_DIGIT:   MOV AH, 0
+ 000B  B0 0F			            MOV AL, 0FH     ; THE FOUR LOWER DIGITS ALIGHT
+ 000D  CD 32			            INT 32H         ; SHOW THE CURRENT OPD
+ 000F  CD 33			            INT 33H         ; READ INPUT FROM KEYBOARD
+ 0011  A8 10			            TEST AL, 10H    ; TEST IF THERE IS AN INPUT
+ 0013  74 F4			            JZ IN_DIGIT     ; IF AL[4]=0, KEEP READING
+ 0015  24 10			            AND AL, 10H     
+ 0017  A8 0A			            TEST AL,0AH     ; IF X>='A', THEN WE JUMP TO 
+ 0019  73 06			            JNC IS_OP
+ 001B  D3 E2			            SHL DX, CL      ; IF X IS A DIGIT, MOVE DX FOUR BITS AND
+ 001D  0A D0			            OR DL, AL       ; MOVE AL'S LAST FOUR DIGIT TO DL
+ 001F  EB E8			            JMP IN_DIGIT
+ 0021  B4 01			IS_OP:      MOV AH, 1
+ 0023  CD 32			            INT 32H         ; SHOW THE LAST INPUTED DIGIT
+ 0025  3C 0F			            CMP AL, 0FH     ; IF THE INPUT IS ' ', THEN IT'S INVALID
+ 0027  EB E0			            JMP IN_DIGIT    ; IGNORE THE INPUT AND GET ANOTHER
+ 0029  52			            PUSH DX         ; SAVE THE LAST OPD IN STACK
+ 002A  3C 0E			            CMP AL, 0EH     ; IF THE INPUT IS '='
+ 002C  74 12			            JZ CALCULATE    ; START THE CALCULATION SESSION
+ 002E  B4 00			            MOV AH, 0
+ 0030  50			            PUSH AX         ; SAVE THE OP IN STACK
+ 0031  83 E8 0A			            SUB AX, 0AH     ; IF ADDITION, SET GLED0 ALIGHT
+				            ; 本来想用跳转的，突然发现sub就行
+				            ; 我可真是个小天才(( •�? ω •�? )�??)
+ 0034  8B D0			            MOV DX, AX      ; STORE THE KIND OF OPD IN DX
+ 0036  B8 0000			            MOV AX, 0
+ 0039  CD 30			            INT 30H         ; OUTPUT THE LIGHTS
+ 003B  BA 0000			            MOV DX, 0
+ 003E  EB C9			            JMP IN_DIGIT
+ 0040  5B			CALCULATE:  POP BX          ; THE LAST OPD
+ 0041  59			            POP CX          ; OP
+ 0042  58			            POP AX          ; THE FIRST OPD
+ 0043  BA 0000			            MOV DX, 0    
+ 0046  83 F9 0A			            CMP CX, 0AH 
+ 0049  74 0F			            JZ IS_ADD
+ 004B  83 F9 0B			            CMP CX, 0BH
+ 004E  74 10			            JZ IS_SUB
+ 0050  83 F9 0C			            CMP CX, 0CH
+ 0053  74 11			            JZ IS_MUL
+ 0055  83 FA 0D			            CMP DX, 0DH
+ 0058  74 15			            JZ IS_DIV
+ 005A  03 C3			IS_ADD:     ADD AX, BX
+ 005C  72 1F			            JC E_OUT
+ 005E  EB 35			            JMP R_OUT       ; REGULAR OUTPUT
+ 0060  2B C3			IS_SUB:     SUB AX, BX
+ 0062  72 19			            JC E_OUT
+ 0064  EB 2F			            JMP R_OUT
+ 0066  F7 E3			IS_MUL:     MUL BX
+ 0068  83 FA 01			            CMP DX, 1
+ 006B  73 10			            JNC E_OUT       ; IF DX>=1, THEN THE ANSWER IS INVALID AND JMP TO E_OUT
+ 006D  EB 26			            JMP R_OUT
+ 006F  F7 C3 FFFF		IS_DIV:     TEST BX, 0FFFFH
+ 0073  74 08			            JZ E_OUT
+ 0075  F7 F3			            DIV BX
+ 0077  D3 E2			            SHL DX, CL      ; SHIFT DX LEFT FOUR BITS
+ 0079  0B C2			            OR AX, DX
+ 007B  EB 18			            JMP R_OUT
+ 007D  B0 80			E_OUT:      MOV AL, 80H     ; ALIGHT THE LEFTMOST DIGIT
+ 007F  B4 00			            MOV AH, 0
+ 0081  CD 32			            INT 32H
+ 0083  BA E000			            MOV DX, 0E000H   ; SHOW E ON THE LEFTMOST DIGIT
+ 0086  B4 02			            MOV AH, 2
+ 0088  CD 32			            INT 32H         ; OUTPUT E
+ 008A  B4 00			WAIT_IN:    MOV AH, 0
+ 008C  CD 33			            INT 33H
+ 008E  A8 73			            TEST AL, 10F     
+ 0090  74 F8			            JZ WAIT_IN      
+ 0092  E9 FF6B			            JMP START
+ 0095  50			R_OUT:      PUSH AX ;DX STORES THE HIGH DIGITS WHILE AX STORES THE HIGH DIGITS 
+ 0096  B4 02			            MOV AH, 2
+ 0098  CD 32			            INT 32H ; SHOW THE HIGHI DIGITS' INPUT
+ 009A  5A			            POP DX
+ 009B  B4 01			            MOV AH, 1
+ 009D  CD 32			            INT 32H
+ 009F  EB E9			            JMP WAIT_IN
+ 00A1				CODE ENDS
+				    END START
+
+Microsoft (R) Macro Assembler Version 6.11		    11/03/18 18:45:14
+4.5.1.asm						     Symbols 2 - 1
+
+
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+CODE . . . . . . . . . . . . . .	16 Bit	 00A1	  Para	  Private 'CODE'	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+CALCULATE  . . . . . . . . . . .	L Near	 0040	  CODE	
+E_OUT  . . . . . . . . . . . . .	L Near	 007D	  CODE	
+IN_DIGIT . . . . . . . . . . . .	L Near	 0009	  CODE	
+IS_ADD . . . . . . . . . . . . .	L Near	 005A	  CODE	
+IS_DIV . . . . . . . . . . . . .	L Near	 006F	  CODE	
+IS_MUL . . . . . . . . . . . . .	L Near	 0066	  CODE	
+IS_OP  . . . . . . . . . . . . .	L Near	 0021	  CODE	
+IS_SUB . . . . . . . . . . . . .	L Near	 0060	  CODE	
+R_OUT  . . . . . . . . . . . . .	L Near	 0095	  CODE	
+START  . . . . . . . . . . . . .	L Near	 0000	  CODE	
+WAIT_IN  . . . . . . . . . . . .	L Near	 008A	  CODE	
+
+	   0 Warnings
+	   0 Errors
