@@ -59,7 +59,7 @@ EXCEPTION:  MOV DX, 0FFFFH
 OUTPUT: 
         MOV AX, DX           
         MOV CL, 0           ; THE NUMER TO ROTATE
-        MOV BX, 0           ; SET BX TO 0. THE FINAL ANS IS SAVED TO [BX]
+        MOV BX, 0           ; SET BX TO 0. THE FINAL ANS IS SAVED TO BX
         MOV SI, 10          ; SI SHOULD ONLY BE SET ONCE DURING THE LOOP. OTHERWISE IT'S A WASTE OF TIME
         ; MOV AH, 1
         ; INT 32H

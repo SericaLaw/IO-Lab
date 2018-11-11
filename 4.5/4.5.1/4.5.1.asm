@@ -3,39 +3,49 @@ CODE SEGMENT 'CODE'
 START:      MOV DX, 0
             MOV CL, 4
             MOV AH, 0
-            INT 30H         ; DISABLE ALL THE LIGHTS
+            INT 30H         ; DISABLE ALL THE LED LIGHTS
 IN_DIGIT:   MOV AH, 0
             MOV AL, 0FH     ; THE FOUR LOWER DIGITS ALIGHT
             INT 32H         ; SHOW THE CURRENT OPD
             INT 33H         ; READ INPUT FROM KEYBOARD
             TEST AL, 10H    ; TEST IF THERE IS AN INPUT
             JZ IN_DIGIT     ; IF AL[4]=0, KEEP READING
-            AND AL, 10H     
-            TEST AL,0AH     ; IF X>='A', THEN WE JUMP TO 
+            ; AND AL, 10H   ; ELSE 
+            AND AL, 0FH     ; SERICA: SHOULD BE AND AL, 0FH
+            ; TEST AL,0AH     ; IF X>='A', THEN WE JUMP TO 
+            CMP AL, 0AH     ; SERICA: SHOULD BE CMP AL, 0AH
             JNC IS_OP
             SHL DX, CL      ; IF X IS A DIGIT, MOVE DX FOUR BITS AND
             OR DL, AL       ; MOVE AL'S LAST FOUR DIGIT TO DL
             JMP IN_DIGIT
 IS_OP:      MOV AH, 1
             INT 32H         ; SHOW THE LAST INPUTED DIGIT
-            CMP AL, 0FH     ; IF THE INPUT IS ' ', THEN IT'S INVALID
-            JMP IN_DIGIT    ; IGNORE THE INPUT AND GET ANOTHER
+            CMP AL, 0EH     ; IF THE INPUT IS ' ', THEN IT'S INVALID
+            ; JMP IN_DIGIT    ; IGNORE THE INPUT AND GET ANOTHER
+            JZ IN_DIGIT     ; SERICA: SHOULD BE JZ IN_DIGIT
             PUSH DX         ; SAVE THE LAST OPD IN STACK
-            CMP AL, 0EH     ; IF THE INPUT IS '='
+            CMP AL, 0FH     ; IF THE INPUT IS '='
             JZ CALCULATE    ; START THE CALCULATION SESSION
             MOV AH, 0
             PUSH AX         ; SAVE THE OP IN STACK
             SUB AX, 0AH     ; IF ADDITION, SET GLED0 ALIGHT
             ; 本来想用跳转的，突然发现sub就行
-            ; 我可真是个小天才(( •�? ω •�? )�??)
+            ; 我可真是个小天才(( •�? ω •�? )�??)
             MOV DX, AX      ; STORE THE KIND OF OPD IN DX
             MOV AX, 0
             INT 30H         ; OUTPUT THE LIGHTS
             MOV DX, 0
             JMP IN_DIGIT
-CALCULATE:  POP BX          ; THE LAST OPD
+CALCULATE:  POP SI          ; THE LAST OPD
+            CALL DEC_TO_BIN
+            MOV BX, DI
+
             POP CX          ; OP
-            POP AX          ; THE FIRST OPD
+
+            POP SI          ; THE FIRST OPD
+            CALL DEC_TO_BIN
+            MOV AX, DI
+
             MOV DX, 0    
             CMP CX, 0AH 
             JZ IS_ADD
@@ -55,11 +65,13 @@ IS_MUL:     MUL BX
             CMP DX, 1
             JNC E_OUT       ; IF DX>=1, THEN THE ANSWER IS INVALID AND JMP TO E_OUT
             JMP R_OUT
-IS_DIV:     TEST BX, 0FFFFH
+IS_DIV:     TEST BX, 0FFFFH ; BX SHOULD NOT BE ZERO
             JZ E_OUT
-            DIV BX
-            SHL DX, CL      ; SHIFT DX LEFT FOUR BITS
-            OR AX, DX
+            XOR DX, DX      ; SERICA: SET DX TO ZERO
+            DIV BX          ; DX(remainder), AX(result)<-(DX:AX)/(BX)
+            MOV CL, 4       ; SERICA: THE "POP CX" HAS CHANGED CL
+            ; SHL DX, CL      ; SHIFT DX LEFT FOUR BITS
+            ; OR AX, DX
             JMP R_OUT
 E_OUT:      MOV AL, 80H     ; ALIGHT THE LEFTMOST DIGIT
             MOV AH, 0
@@ -74,11 +86,76 @@ WAIT_IN:    MOV AH, 0
             JMP START
 R_OUT:      PUSH AX ;DX STORES THE HIGH DIGITS WHILE AX STORES THE HIGH DIGITS 
             MOV AH, 2
+
             INT 32H ; SHOW THE HIGHI DIGITS' INPUT
             POP DX
+            MOV AX, DX
+            CALL BIN_TO_DEC
+            MOV DX, AX
             MOV AH, 1
             INT 32H
             JMP WAIT_IN
+DEC_TO_BIN PROC
+; PARAM:    SI = DEC NUM
+; RETURN:   DI = BIN NUM
+    PUSH AX ; AX STORES THE RESULT
+    PUSH BX ; USE BX AS MASK
+    PUSH CX ; USE CX AS LOOP COUNTER
+    PUSH DX ; DX STORES CURRENT DIGIT
+
+    XOR AX, AX  ; INIT AX
+    XOR DI, DI  ; INIT DI
+    MOV CX, 12
+
+DEC_TO_BIN_LOOP:
+    MOV DX, SI  ; SAVE A COPY OF DEC NUM
+    MOV BX, 000FH   ; MASK
+    SHL BX, CL  ; ADJUST THE MASK ACCORDING TO CL
+
+    AND DX, BX
+    SHR DX, CL  ; EXTRACT CURRENT DIGIT AND SAVE IT TO DX
+    MOV BX, 1O
+    MUL BX      ; (AX) *= 10
+    ADD AX, DX  ; (AX) += (DX)
+
+    SUB CL, 4   ; LOOP CONTROL
+    CMP CL, -4  ; END
+    JNZ DEC_TO_BIN_LOOP
+
+    MOV DI, AX  ; RETURN PARAM
+
+    POP DX
+    POP CX
+    POP BX
+    POP AX      ; RETRIEVE SCENE
+DEC_TO_BIN ENDP
+
+BIN_TO_DEC PROC
+; PARAM: AX = BIN NUM
+; RETURN: AX = DEC NUM
+    PUSH BX
+    PUSH CX
+    PUSH DX
+    PUSH SI
+
+    MOV CL, 0
+    MOV BX, 0
+    MOV SI, 10
+BIN_TO_DEC_LOOP:
+    XOR DX, DX
+    DIV SI
+    SAL DX, CL
+    OR BX, DX
+    ADD CL, 4
+    CMP AX, 0
+    JNZ BIN_TO_DEC_LOOP
+    MOV AX, BX
+
+    POP SI
+    POP DX
+    POP CX
+    POP BX
+BIN_TO_DEC ENDP
 CODE ENDS
     END START
-
+    
