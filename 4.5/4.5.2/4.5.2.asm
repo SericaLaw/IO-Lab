@@ -1,7 +1,9 @@
 CODE SEGMENT 'CODE'
     ASSUME CS:CODE
 START:  
-INPUT_SESS: MOV AL, 0FFH     ; SET AL TO 1111 1111 B
+INPUT_SESS: XOR DX, DX   ; SERICA: CLEAR LEDS
+            INT 30H
+            MOV AL, 0FFH     ; SET AL TO 1111 1111 B
             XOR AH, AH      ; SET AH=0
             INT 32H         ; ENABLE A[7:0]
             MOV DX, 0
@@ -34,14 +36,13 @@ GUESS_SESS: MOV BX, DX      ; REMOVE THE RESULT FROM REGISTER DX TO REGISTER BX(
 
 ; DOES ANY MORE OPERATION NEED OT BE INSERTED?
 ; CAN WE USE SI TO SAVE THE NUMBER OF TRIALS?
-            XOR SI, SI
+            XOR SI, SI      ; SI STORES NUM TRAILED, INIT ONCE
+            
+G_INPUT_S:  MOV CX, 2
             MOV DX, SI
             MOV AH, 1
-            INT 32H         ; SET A[3:0] TO THE NUMBER OF TRIALS TAKEN
-G_INPUT_S:
-        MOV CX, 2       
-G_INPUT:    
-            XOR DX, DX
+            INT 32H         ; SET A[3:0] TO THE NUMBER OF TRIALS TAKEN     
+G_INPUT:    XOR DX, DX
             XOR AH, AH
             INT 33H         ; READ FROM KEYBOARD, STORE IN AL
             CMP AL, 10H     ; COMPARE AL WITH 0. IF CF=1, THEN INPUT IS INVALID AND WE DO NOT SHOW IT
