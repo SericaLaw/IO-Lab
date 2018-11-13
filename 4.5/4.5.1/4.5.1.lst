@@ -1,0 +1,250 @@
+Microsoft (R) Macro Assembler Version 6.11		    11/13/18 14:40:33
+4.5.1.asm						     Page 1 - 1
+
+
+ 0000				DATA SEGMENT
+ 0000 0000			    OPD_BIN DW ?
+ 0002 0000			    OPD_DEC DW ?
+ 0004 0000			    OPD_A DW ?
+ 0006 0000			    OPD_B DW ?
+ 0008 00			    OP DB ?
+ 0009 0000			    INPUTED DW 0
+ 000B 000A			    TEN DW 10
+ 000D				DATA ENDS
+ 0000				CODE SEGMENT 'CODE'
+				    ASSUME CS:CODE, DS:DATA
+ 0000				START:
+ 0000				INIT:
+ 0000  B8 0080			    MOV AX, 80H
+ 0003  8E D8			    MOV DS, AX  ; INIT DS
+ 0005  33 C0			    XOR AX, AX
+ 0007  33 D2			    XOR DX, DX
+ 0009  CD 30			    INT 30H         ; DISABLE ALL THE LED LIGHTS
+ 000B  B0 FF			    MOV AL, 0FFH
+ 000D  CD 32			    INT 32H         ; ENABLE A[7..0]
+ 000F				IN_DIGIT_S:
+ 000F  33 D2			    XOR DX, DX
+ 0011				IN_DIGIT:  
+ 0011  32 E4			    XOR AH, AH
+ 0013  CD 33			    INT 33H         ; READ INPUT FROM KEYBOARD
+ 0015  A8 10			    TEST AL, 10H    ; TEST IF THERE IS AN INPUT
+ 0017  74 F8			    JZ IN_DIGIT     ; IF AL[4]=0, KEEP READING
+ 0019  24 0F			    AND AL, 0FH     ; ELSE
+ 001B  3C 0A			    CMP AL, 0AH      
+ 001D  73 0C			    JNC IS_OP       ; IF X>='A', THEN WE JUMP TO    
+ 001F  B1 04			    MOV CL, 4
+ 0021  D3 E2			    SHL DX, CL      ; IF X IS A DIGIT, MOVE DX FOUR BITS AND
+ 0023  0A D0			    OR DL, AL       ; MOVE AL'S LAST FOUR DIGIT TO DL
+ 0025  B4 01			    MOV AH, 1
+ 0027  CD 32			    INT 32H         ; SHOW THE LAST INPUTED DIGIT
+ 0029  EB E6			    JMP IN_DIGIT
+ 002B				IS_OP:      
+				    ; MOV AH, 1
+				    ; INT 32H         ; SHOW THE LAST INPUTED DIGIT
+ 002B  3C 0E			    CMP AL, 0EH     ; IF THE INPUT IS ' ', THEN IT'S INVALID
+				    ; JMP IN_DIGIT    ; IGNORE THE INPUT AND GET ANOTHER
+ 002D  74 E0			    JZ IN_DIGIT_S     ; SERICA: SHOULD BE JZ IN_DIGIT
+ 002F  52			    PUSH DX         ; SAVE THE LAST OPD IN STACK
+ 0030  3C 0F			    CMP AL, 0FH     ; IF THE INPUT IS '='
+ 0032  74 11			    JZ CALCULATE    ; START THE CALCULATION SESSION
+ 0034  8B C8			    MOV CX, AX
+ 0036  50			    PUSH AX         ; SAVE THE OP IN STACK
+ 0037  83 E9 0A			    SUB CX, 0AH     ; IF ADDITION, SET GLED0 ALIGHT
+				    ; PUSH CX
+ 003A  BA 0001			    MOV DX, 1
+				    ; MOV CL, AL
+ 003D  D3 E2			    SHL DX, CL
+ 003F  32 E4			    XOR AH, AH
+ 0041  CD 30			    INT 30H
+				    ; POP CX
+				  
+ 0043  EB CA			    JMP IN_DIGIT_S
+ 0045				CALCULATE:  
+ 0045  8F 06 0002 R		    POP OPD_DEC          ; THE LAST OPD
+ 0049  E8 0067			    CALL DEC_TO_BIN
+ 004C  8B 1E 0000 R		    MOV BX, OPD_BIN
+				      ; DEBUG
+ 0050  8B 16 0000 R		    MOV DX, OPD_BIN
+ 0054  B4 02			    MOV AH, 2
+ 0056  CD 32			    INT 32H
+				    ; POP BX
+ 0058  59			    POP CX          ; OP
+ 0059  58			    POP AX
+				    ; POP SI          ; THE FIRST OPD
+				    ; CALL DEC_TO_BIN
+				    ; MOV AX, DI
+
+				    ; MOV DX, 0    
+ 005A  83 F9 0A			    CMP CX, 0AH 
+ 005D  74 0F			    JZ IS_ADD
+ 005F  83 F9 0B			    CMP CX, 0BH
+ 0062  74 10			    JZ IS_SUB
+ 0064  83 F9 0C			    CMP CX, 0CH
+ 0067  74 11			    JZ IS_MUL
+ 0069  83 FA 0D			    CMP DX, 0DH
+ 006C  74 15			    JZ IS_DIV
+ 006E				IS_ADD:     
+ 006E  03 C3			    ADD AX, BX
+ 0070  72 1D			    JC E_OUT
+ 0072  EB 33			    JMP R_OUT       ; REGULAR OUTPUT
+ 0074				IS_SUB:     
+ 0074  2B C3			    SUB AX, BX
+ 0076  72 17			    JC E_OUT
+ 0078  EB 2D			    JMP R_OUT
+ 007A				IS_MUL:     
+ 007A  F7 E3			    MUL BX
+ 007C  83 FA 01			    CMP DX, 1
+ 007F  73 0E			    JNC E_OUT       ; IF DX>=1, THEN THE ANSWER IS INVALID AND JMP TO E_OUT
+ 0081  EB 24			    JMP R_OUT
+ 0083				IS_DIV:    
+ 0083  F7 C3 FFFF		    TEST BX, 0FFFFH ; BX SHOULD NOT BE ZERO
+ 0087  74 06			    JZ E_OUT
+ 0089  33 D2			    XOR DX, DX      ; SERICA: SET DX TO ZERO
+ 008B  F7 F3			    DIV BX          ; DX(remainder), AX(result)<-(DX:AX)/(BX)
+				    ; MOV CL, 4       ; SERICA: THE "POP CX" HAS CHANGED CL
+				    ; SHL DX, CL      ; SHIFT DX LEFT FOUR BITS
+				    ; OR AX, DX
+ 008D  EB 18			    JMP R_OUT
+ 008F				E_OUT:      
+ 008F  B0 80			    MOV AL, 80H     ; ALIGHT THE LEFTMOST DIGIT
+ 0091  B4 00			    MOV AH, 0
+ 0093  CD 32			    INT 32H
+ 0095  BA E000			    MOV DX, 0E000H   ; SHOW E ON THE LEFTMOST DIGIT
+ 0098  B4 02			    MOV AH, 2
+ 009A  CD 32			    INT 32H         ; OUTPUT E
+ 009C				WAIT_IN:    
+ 009C  32 E4			    XOR AH, AH
+ 009E  CD 33			    INT 33H
+ 00A0  A8 73			    TEST AL, 10F     
+ 00A2  74 F8			    JZ WAIT_IN      
+ 00A4  E9 FF59			    JMP START
+ 00A7				R_OUT:      
+ 00A7  50			    PUSH AX ;DX STORES THE HIGH DIGITS WHILE AX STORES THE LOW DIGITS 
+ 00A8  B4 02			    MOV AH, 2
+
+ 00AA  CD 32			    INT 32H ; SHOW THE HIGH DIGITS' INPUT
+ 00AC  5A			    POP DX
+				    ; MOV AX, DX
+				    ; CALL BIN_TO_DEC
+				    ; MOV DX, AX
+ 00AD  B4 01			    MOV AH, 1
+ 00AF  CD 32			    INT 32H
+ 00B1  EB E9			    JMP WAIT_IN
+
+ 00B3				DEC_TO_BIN PROC
+				; PARAM:    SI: DEC NUM
+				; RETURN:   DI: BIN NUM
+ 00B3  50			    PUSH AX ; AX STORES THE RESULT
+ 00B4  53			    PUSH BX ; USE BX AS MASK
+ 00B5  51			    PUSH CX ; USE CX AS LOOP COUNTER
+ 00B6  52			    PUSH DX ; DX STORES CURRENT DIGIT
+
+ 00B7  33 C0			    XOR AX, AX  ; INIT AX
+ 00B9  33 FF			    XOR DI, DI  ; INIT DI
+ 00BB  B9 000C			    MOV CX, 12
+ 00BE				DEC_TO_BIN_LOOP:
+ 00BE  8B 16 0002 R		    MOV DX, OPD_DEC  ; SAVE A COPY OF DEC NUM
+ 00C2  BB 000F			    MOV BX, 000FH   ; MASK
+ 00C5  D3 E3			    SHL BX, CL  ; ADJUST THE MASK ACCORDING TO CL
+
+ 00C7  23 D3			    AND DX, BX
+ 00C9  D3 EA			    SHR DX, CL  ; EXTRACT CURRENT DIGIT AND SAVE IT TO DX
+ 00CB  8B F2			    MOV SI, DX  ; STORE THE RESULT IN SI
+ 00CD  BB 0001			    MOV BX, 1O
+ 00D0  F7 E3			    MUL BX      ; (AX) *= 10
+ 00D2  03 C6			    ADD AX, SI  ; (AX) += (DX)
+
+ 00D4  80 E9 04			    SUB CL, 4   ; LOOP CONTROL
+ 00D7  80 F9 FC			    CMP CL, -4  ; END
+ 00DA  75 E2			    JNZ DEC_TO_BIN_LOOP
+
+ 00DC  A3 0000 R		    MOV OPD_BIN, AX  ; RETURN PARAM
+				    
+ 00DF  5A			    POP DX
+ 00E0  59			    POP CX
+ 00E1  5B			    POP BX
+ 00E2  58			    POP AX      ; RETRIEVE SCENE
+ 00E3  C3			    RET
+ 00E4				DEC_TO_BIN ENDP
+
+ 00E4				BIN_TO_DEC PROC
+				; PARAM: (DX:AX) AS BIN NUM
+				; RETURN: (DX:AX) AS DEC NUM
+ 00E4  53			    PUSH BX
+ 00E5  51			    PUSH CX
+ 00E6  52			    PUSH DX
+ 00E7  56			    PUSH SI
+
+ 00E8  B1 00			    MOV CL, 0
+ 00EA  BB 0000			    MOV BX, 0
+ 00ED  BE 000A			    MOV SI, 10
+ 00F0				BIN_TO_DEC_LOOP:
+ 00F0  33 D2			    XOR DX, DX
+ 00F2  F7 F6			    DIV SI
+ 00F4  D3 E2			    SAL DX, CL
+ 00F6  0B DA			    OR BX, DX
+ 00F8  80 C1 04			    ADD CL, 4
+ 00FB  83 F8 00			    CMP AX, 0
+ 00FE  75 F0			    JNZ BIN_TO_DEC_LOOP
+ 0100  8B C3			    MOV AX, BX
+
+ 0102  5E			    POP SI
+ 0103  5A			    POP DX
+ 0104  59			    POP CX
+ 0105  5B			    POP BX
+ 0106  C3			    RET
+ 0107				BIN_TO_DEC ENDP
+ 0107				CODE ENDS
+				    END START
+				    
+Microsoft (R) Macro Assembler Version 6.11		    11/13/18 14:40:33
+4.5.1.asm						     Symbols 2 - 1
+
+
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+CODE . . . . . . . . . . . . . .	16 Bit	 0107	  Para	  Private 'CODE'	
+DATA . . . . . . . . . . . . . .	16 Bit	 000D	  Para	  Private 
+
+
+Procedures,  parameters and locals:
+
+                N a m e                 Type     Value    Attr
+
+BIN_TO_DEC . . . . . . . . . . .	P Near	 00E4	  CODE	Length= 0023 Private
+DEC_TO_BIN . . . . . . . . . . .	P Near	 00B3	  CODE	Length= 0031 Private
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+BIN_TO_DEC_LOOP  . . . . . . . .	L Near	 00F0	  CODE	
+CALCULATE  . . . . . . . . . . .	L Near	 0045	  CODE	
+DEC_TO_BIN_LOOP  . . . . . . . .	L Near	 00BE	  CODE	
+E_OUT  . . . . . . . . . . . . .	L Near	 008F	  CODE	
+INIT . . . . . . . . . . . . . .	L Near	 0000	  CODE	
+INPUTED  . . . . . . . . . . . .	Word	 0009	  DATA	
+IN_DIGIT_S . . . . . . . . . . .	L Near	 000F	  CODE	
+IN_DIGIT . . . . . . . . . . . .	L Near	 0011	  CODE	
+IS_ADD . . . . . . . . . . . . .	L Near	 006E	  CODE	
+IS_DIV . . . . . . . . . . . . .	L Near	 0083	  CODE	
+IS_MUL . . . . . . . . . . . . .	L Near	 007A	  CODE	
+IS_OP  . . . . . . . . . . . . .	L Near	 002B	  CODE	
+IS_SUB . . . . . . . . . . . . .	L Near	 0074	  CODE	
+OPD_A  . . . . . . . . . . . . .	Word	 0004	  DATA	
+OPD_BIN  . . . . . . . . . . . .	Word	 0000	  DATA	
+OPD_B  . . . . . . . . . . . . .	Word	 0006	  DATA	
+OPD_DEC  . . . . . . . . . . . .	Word	 0002	  DATA	
+OP . . . . . . . . . . . . . . .	Byte	 0008	  DATA	
+R_OUT  . . . . . . . . . . . . .	L Near	 00A7	  CODE	
+START  . . . . . . . . . . . . .	L Near	 0000	  CODE	
+TEN  . . . . . . . . . . . . . .	Word	 000B	  DATA	
+WAIT_IN  . . . . . . . . . . . .	L Near	 009C	  CODE	
+
+	   0 Warnings
+	   0 Errors
