@@ -5,7 +5,6 @@ DATA SEGMENT
     OPD_B DW ?
     INPUT DW 0
     OP DB 0
-    ; RESULT DW ?
     TEN DW 10
 DATA ENDS
 
@@ -16,7 +15,7 @@ INIT:
     ; INIT DS
     MOV AX, 0080H
     MOV DS, AX
-
+    MOV INPUT, 0
     ; ENABLE A[7..0]
     XOR AH, AH
     MOV AL, 0FFH
@@ -46,15 +45,16 @@ WAIT_INPUT_LOOP:
     JMP WAIT_INPUT_LOOP
 INPUT_OP:
     ; IF OPERATOR IS ' ', DO NOTHING
-    TEST AL, 0EH
+    CMP AL, 0EH
     JZ WAIT_INPUT
     ; ELSE IF OPERATOR IS '=', CACULATE AND DISPLAY RESULT
-    TEST AL, 0FH
+    CMP AL, 0FH
     JZ INPUT_EQ
 
     ; IF INPUT = 1, DO NOTHING AND WAIT '='
     TEST INPUT, 1
-    JMP WAIT_INPUT
+    JNZ WAIT_INPUT_LOOP
+    
     ; ELSE, STORE THE FIRST OPD IN OPD_A AND SAVE OP
     INC INPUT
     MOV OPD_DEC, DX
@@ -62,10 +62,11 @@ INPUT_OP:
     PUSH OPD_BIN
     POP OPD_A   ; SAVE OPD_A
     ; DEBUG
-    PUSH AX
-    MOV AH, 2
-    INT 32H
-    POP AX
+    ; PUSH AX
+    ; MOV AH, 2
+    ; MOV DX, OPD_A
+    ; INT 32H
+    ; POP AX
     ; SAVE OP
     SUB AL, 0AH
     MOV OP, AL
@@ -88,6 +89,14 @@ INPUT_EQ:
     CALL DEC_TO_BIN
     PUSH OPD_BIN
     POP OPD_B
+    
+    ; DEBUG
+    ; PUSH AX
+    ; MOV AH, 2
+    ; MOV DX, OPD_B
+    ; INT 32H
+    ; POP AX
+    
     ; CALCULATE AND DISPLAY
     CALL CALCULATE
    
@@ -97,19 +106,18 @@ CALCULATE PROC
     MOV AX, OPD_A
     MOV BX, OPD_B
     MOV CL, OP
- 
-    CMP CX, 00H
+    XOR DX, DX
+    CMP CL, 00H
     JZ IS_ADD
-    CMP CX, 01H
+    CMP CL, 01H
     JZ IS_SUB
-    CMP CX, 02H
+    CMP CL, 02H
     JZ IS_MUL
-    CMP DX, 03H
+    CMP CL, 03H
     JZ IS_DIV
 IS_ADD:     
     ADD AX, BX
     ADC DX, 0
-    ; JC E_OUT
     JMP R_OUT       ; REGULAR OUTPUT
 IS_SUB:     
     SUB AX, BX
@@ -121,7 +129,7 @@ IS_MUL:
     JNC E_OUT       ; IF DX>=1, THEN THE ANSWER IS INVALID AND JMP TO E_OUT
     JMP R_OUT
 IS_DIV:    
-    TEST BX, 0   ; BX SHOULD NOT BE ZERO
+    CMP BX, 0   ; BX SHOULD NOT BE ZERO
     JZ E_OUT
     XOR DX, DX      ; SERICA: SET DX TO ZERO
     DIV BX          ; DX(remainder), AX(result)<-(DX:AX)/(BX)
@@ -130,11 +138,14 @@ E_OUT:
     MOV DX, 0E000H   ; SHOW E ON THE LEFTMOST DIGIT
     MOV AH, 2
     INT 32H         ; OUTPUT E
+    XOR DX, DX
+    MOV AH, 1
+    INT 32H
     JMP WAIT_IN
 R_OUT:
     CALL BIN_TO_DEC
-    ; PUSH AX ;DX STORES THE HIGH DIGITS WHILE BX STORES THE LOW DIGITS
 DISPLAY: 
+    ; DX STORES THE HIGH DIGITS WHILE BX STORES THE LOW DIGITS
     MOV AH, 2
 
     INT 32H ; SHOW THE HIGH DIGITS' INPUT
@@ -146,12 +157,12 @@ DISPLAY:
     MOV AH, 1
     INT 32H
     JMP WAIT_IN
-DIV_OUT:         ;DX and AX
+DIV_OUT:         ]
     MOV DI,DX
-    MOV DX,0
+    XOR DX, DX
     CALL BIN_TO_DEC
     MOV AX,DI
-    MOV DX,0
+    XOR DX, DX
     MOV DI,BX
     CALL BIN_TO_DEC
     MOV DX,BX
@@ -160,8 +171,14 @@ DIV_OUT:         ;DX and AX
 WAIT_IN:    
     XOR AH, AH
     INT 33H
-    TEST AL, 10F     
-    JZ WAIT_IN      
+    TEST AL, 10H     
+    JZ WAIT_IN
+    XOR DX, DX
+    INT 30H
+    MOV AH, 1
+    INT 32H
+    MOV AH, 2
+    INT 32H
     RET
 CALCULATE ENDP
 
@@ -197,19 +214,19 @@ DEC_TO_BIN ENDP
 BIN_TO_DEC PROC
 ; PARAM DX:AX:  BIN
 ; RETURN DX:BX: DEC
-    MOV CX,4
-    MOV SI,0
-    MOV BX,0
+    XOR BX, BX
+    XOR SI, SI
+    MOV CX, 4
 BIN_TO_DEC_LOOP:
     PUSH CX
-    MOV CX,SI
+    MOV CX, SI
     DIV TEN     ; (DX:AX) / 10 商在AX 余数在DX
-    SHL DX,CL
-    ADD SI,4
-    OR BX,DX    ;新得到的四位放在BX
-    MOV DX,0
+    SHL DX, CL
+    ADD SI, 4
+    OR BX, DX    ;新得到的四位放在BX
+    XOR DX, DX
     POP CX
-    TEST AX,AX  ;判断商是否为0
+    TEST AX, AX  ;判断商是否为0
     LOOPNZ BIN_TO_DEC_LOOP
     DIV TEN
     RET
