@@ -29,20 +29,19 @@ SAVE_RES:   XOR AH, AH
             JMP SAVE_RES
 
 GUESS_SESS: MOV BX, DX      ; REMOVE THE RESULT FROM REGISTER DX TO REGISTER BX(BL)
-            ;AND BX, 0FFH     ; SERICA: ONLY A5~A4 IS VALID INPUT
+            AND BX, 0FFH     ; SERICA: ONLY A5~A4 IS VALID INPUT
             MOV DX, 0FFFFH  ; SET A[7:4] TO FFFF
             MOV AH, 2
             INT 32H         ; HIDE THE TRUE RESULT AND SHOW FFFF INSTEAD ON A[7:4]
+        
 
 ; DOES ANY MORE OPERATION NEED OT BE INSERTED?
 ; CAN WE USE SI TO SAVE THE NUMBER OF TRIALS?
             XOR SI, SI      ; SI STORES NUM TRAILED, INIT ONCE
             
 G_INPUT_S:  MOV CX, 2
-            MOV DX, SI
-            MOV AH, 1
-            INT 32H         ; SET A[3:0] TO THE NUMBER OF TRIALS TAKEN     
-G_INPUT:    XOR DX, DX
+            XOR DX, DX
+G_INPUT:    
             XOR AH, AH
             INT 33H         ; READ FROM KEYBOARD, STORE IN AL
             CMP AL, 10H     ; COMPARE AL WITH 0. IF CF=1, THEN INPUT IS INVALID AND WE DO NOT SHOW IT
@@ -51,35 +50,38 @@ G_INPUT:    XOR DX, DX
             JZ SHOW_RES
             JNC G_INPUT
             AND AL, 0FH     ; IF INPUT IS VALID, THEN
-            ADD DL, DL      ; SHIFT DX LEFT 4 BITS
-            ADD DL, DL
-            ADD DL, DL
-            ADD DL, DL
+            PUSH CX
+            MOV CL, 4
+          
+            SHL DL, CL
+            POP CX
             OR DL, AL       ; SAVE DIGIT
             LOOP G_INPUT
             INC SI
             PUSH DX
-            ; CMP DX, BX      ; SERICA: SHOULD COMPARE BL WITH DL
             MOV DX, SI
             MOV AH, 1
             INT 32H         ; SET A[3:0] TO THE NUMBER OF TRIALS TAKEN
             POP DX
-            CMP DX, BX 
+            
+            CMP DL, BL 
             JZ G_EQ         ; IF GUESS EQUALS TO THE TRUE RESULT
-            JC G_LT         ; IF GUESS IS LESS THAN THE TRUE RESULT
-G_GT:       XOR AH, AH      
-            MOV DX, 8000H   ; YLED7=1
+            JA G_GT         ; IF GUESS IS LESS THAN THE TRUE RESULT
+G_LT:       MOV DX, 80H     ; GLED7=1
+            XOR AH, AH
             INT 30H
             JMP G_INPUT_S
 G_EQ:       XOR AH, AH
             XOR DX, DX      ; ALL LIGHTS ARE OFF
             INT 30H
             JMP NEXT_SESS
-G_LT:       MOV DX, 80H     ; GLED7=1
-            XOR AH, AH
+G_GT:       XOR AH, AH      
+            MOV DX, 8000H   ; YLED7=1
             INT 30H
             JMP G_INPUT_S
-SHOW_RES:   MOV DX, BX      ; SHOW THE TRUE RESULT IMMEDIATELLY AFTER PRESSING 'A'
+SHOW_RES:   XOR DX, DX   ; SERICA: CLEAR LEDS
+            INT 30H
+            MOV DX, BX      ; SHOW THE TRUE RESULT IMMEDIATELLY AFTER PRESSING 'A'
             MOV AH, 2
             INT 32H         
             ; SERICA: NOT NECESSARY
