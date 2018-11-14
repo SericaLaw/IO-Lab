@@ -220,14 +220,14 @@ BIN_TO_DEC PROC
 BIN_TO_DEC_LOOP:
     PUSH CX
     MOV CX, SI
-    DIV TEN     ; (DX:AX) / 10 商在AX 余数在DX
+    DIV TEN     ; DX(remainder), AX(result)<-(DX:AX)/10 
     SHL DX, CL
     ADD SI, 4
-    OR BX, DX    ;新得到的四位放在BX
-    XOR DX, DX
+    OR BX, DX
+    XOR DX, DX  ; DO NOT FORGET CLEAR DX
     POP CX
-    TEST AX, AX  ;判断商是否为0
-    LOOPNZ BIN_TO_DEC_LOOP
+    CMP AX, 0
+    JNZ BIN_TO_DEC_LOOP
     DIV TEN
     RET
 BIN_TO_DEC ENDP
