@@ -20,7 +20,7 @@ CODE ENDS
 
 ### 2）算法流程图
 
-![4.2.1_flow_chart](images/4.2/4.2.1_flow_chart.png)
+![4.2.1_flow_chart](flow_charts/4.2.1_flow_chart.png)
 
 ### 3） 程序清单
 
@@ -42,7 +42,7 @@ CODE ENDS   ; the end of code segment
 
 ## 三、实验体会
 
-这个实验是助教带领我们熟悉SimpleSystem系统的基本中断调用。整体进行的很顺利。我们也按部就班的熟悉了i8086 IDE的使用，以及用Vivado生成比特流文件并给实验板编程。
+这个实验助教带我们熟悉了Minisys系统，我们学会了如何用i8086 IDE生成比特流文件并将程序下载进实验板中运行，整体进行顺利。
 
 # 实验4.2.2 两数相加
 
@@ -72,7 +72,7 @@ END START
 
 ### 2）算法流程图
 
-![4.2.2_flow_chart](images/4.2/4.2.2_flow_chart.png)
+![4.2.2_flow_chart](flow_charts/4.2.2_flow_chart.png)
 
 ### 3） 程序清单
 
@@ -103,11 +103,7 @@ CODE ENDS
 
 ## 三、实验体会
 
-1. 刚开始做实验的时候，忘记了先初始化数码管的显示，导致浪费了不少时间
-
-2. 最初没有意识到两个8位二进制数相加时会产生进位，结果是一个三位十六进制数，致使结果错误
-
-这次实验中，我的体会是，汇编是一种底层语言，需要程序员去考虑很多细节（如进位），在以后的编程过程中需要格外注意
+我们用了一种巧妙的方法来实现两个8位数带进位的加法，这样写程序指令数可能会少一些。
 
 # 实验4.2.3 查表求平方并以十六进制输出
 
@@ -138,7 +134,7 @@ CODE ENDS
 
 ### 2）算法流程图
 
-![4.2.3_flow_chart](images/4.2/4.2.3_flow_chart.png)
+![4.2.3_flow_chart](flow_charts/4.2.3_flow_chart.png)
 
 ### 3） 程序清单
 
@@ -172,7 +168,7 @@ CODE ENDS
 
 ## 三、实验体会
 
-这次实验中要注意到的一点是，实验板和DOSBox虚拟机环境不同，数据段从0080H开始，编程时要注意。同时，这次实验也让我熟悉了XLAT查表指令的使用
+对于有数据段的程序，一定要初始化DS。实验手册上明确实验板的数据段从0080H开始，不能遗漏。同时，这次实验也让我们熟悉了XLAT查表指令的使用。
 
 # 实验4.3.3 两个数的加减乘
 
@@ -311,6 +307,8 @@ CODE ENDS
 
 ### 2）算法流程图
 
+![4.4.1_flow_chart](flow_charts/4.4.1_flow_chart.png)
+
 ### 3） 程序清单
 
 ```assembly
@@ -403,7 +401,9 @@ CODE ENDS
 
 ## 三、实验体会
 
-# 实验4.4.2
+这次实验进一步帮助我们熟悉汇编语言的编程，用到了一些诸如双字左移、存储器存取的技巧，采用了循环以及分支的程序设计。当然，判断回文这里用的是按字符逐个比较，也可以考虑用串操作代替逐个字符的处理。
+
+# 实验4.4.2 利用递归程序，计算N!
 
 ## 一、实验目的
 
@@ -423,7 +423,41 @@ CODE ENDS
 ### 3） 程序清单
 
 ```assembly
-
+CODE SEGMENT 'CODE'
+    ASSUME CS:CODE
+START:
+INPUT:  MOV AH, 0
+        INT 33H
+        CMP AL, 10001B  ;IF AL < 10001, CF = 1
+        JC INPUT
+        CMP AL, 10111B  ;IF INPUT >= 7, CF= 0
+        JNC INPUT
+        AND AL, 0FH
+        MOV CX, AX
+        MOV AX, 1
+        ;MOV DX, 1       ; THE RESULT WOULD BE SAVED DIRECTLY TO DX
+FAC:    
+        MUL CX
+        LOOP FAC
+        MOV SI, 10
+        MOV CL, 0
+        MOV BX, 0
+OUTPUT: XOR DX, DX
+        DIV SI
+        SAL DX, CL
+        OR BX, DX
+        ADD CL, 4
+        TEST AX, 0FFFFH
+        JNZ OUTPUT
+        MOV AL, 0FH
+        MOV AH, 0
+        INT 32H     ; ENABLE A[3:0] 
+        MOV AH, 1
+        MOV DX, BX
+        INT 32H     ; SHOW THE RESULT
+        JMP START
+CODE ENDS
+    END START
 ```
 
 ### 4） 结果照片
@@ -454,7 +488,7 @@ CODE ENDS
 
 ## 三、实验体会
 
-# 实验4.5.1
+# 实验4.5.1 四则运算计算器
 
 ## 一、实验目的
 
@@ -489,6 +523,8 @@ b）当按下操作符后，开始输入第二个操作数，且第一个数为�
 c）按下“＝”号，才会输出计算结果，此时再按下任意键启动下一轮的计算
 
 ### 2）算法流程图
+
+![4.5.1_flow_chart](flow_charts/4.5.1_flow_chart.png)
 
 ### 3） 程序清单
 
@@ -547,7 +583,7 @@ INPUT_OP:
     JZ INPUT_EQ
 
     ; IF INPUT = 1, DO NOTHING AND WAIT '='
-    TEST INPUT, 1
+    CMP INPUT, 1
     JNZ WAIT_INPUT_LOOP
     
     ; ELSE, STORE THE FIRST OPD IN OPD_A AND SAVE OP
@@ -578,19 +614,11 @@ INPUT_OP:
     
     JMP WAIT_INPUT
 INPUT_EQ:
-    INC INPUT
     ; SAVE OPD_B
     MOV OPD_DEC, DX
     CALL DEC_TO_BIN
     PUSH OPD_BIN
     POP OPD_B
-    
-    ; DEBUG
-    ; PUSH AX
-    ; MOV AH, 2
-    ; MOV DX, OPD_B
-    ; INT 32H
-    ; POP AX
     
     ; CALCULATE AND DISPLAY
     CALL CALCULATE
@@ -645,9 +673,6 @@ DISPLAY:
 
     INT 32H ; SHOW THE HIGH DIGITS' INPUT
     MOV DX, BX
-    ; MOV AX, DX
-    ; CALL BIN_TO_DEC
-    ; MOV DX, AX
 
     MOV AH, 1
     INT 32H
@@ -777,9 +802,9 @@ END START
 
 ## 三、实验体会
 
+这次实验综合运用了我们所学的汇编知识，程序流程较为复杂，设计了多个子程序负责不同的任务，如二进制和十进制之间的转换等等。在编程时，要考虑许多运行细节，如各个寄存器的状态和职责，且如果子程序要用到寄存器，一定要注意先保护现场，执行后要恢复。这个实验中子程序还用到了存储器操作数传参的方式。由于程序较为复杂，因此设计时先画好流程图显得尤其重要。另外，因为是汇编，且要烧入电路才能看运行效果，调试起来比较麻烦。遇到问题时，我们人为加了一些代码，使寄存器变量打印在数码管上，以此作为“断点”，这种方式帮助我们解决了程序中出现的错误。
 
-
-# 实验4.5.2
+# 实验4.5.2 猜数游戏
 
 ## 一、实验目的
 
