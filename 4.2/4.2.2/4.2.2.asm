@@ -1,10 +1,6 @@
 CODE SEGMENT 'CODE'
     ASSUME CS:CODE
 START:
-; 从拨码开关输入两�?8位二进制数（A、B�?
-; 将这两个数的和以16进制数形式输出到数码管上
-; A等于SW15~SW8的�??
-; B等于SW7~SW0的�??
     MOV AH, 0
     INT 31H     ; read input
     MOV CH, DH  ; copy DH to CH
