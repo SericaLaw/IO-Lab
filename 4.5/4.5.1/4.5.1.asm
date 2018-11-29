@@ -19,7 +19,7 @@ INIT:
     MOV AL, 0FFH
     INT 32H         ; ENABLE A[7..0]
 IN_DIGIT_S:
-    XOR DX, DX
+    XOR DX, DX      ;
 IN_DIGIT:  
     XOR AH, AH
     INT 33H         ; READ INPUT FROM KEYBOARD
@@ -31,7 +31,7 @@ IN_DIGIT:
     MOV CL, 4
     SHL DX, CL      ; IF X IS A DIGIT, MOVE DX FOUR BITS AND
     OR DL, AL       ; MOVE AL'S LAST FOUR DIGIT TO DL
-    MOV AH, 1
+    MOV AH, 2
     INT 32H         ; SHOW THE LAST INPUTED DIGIT
     JMP IN_DIGIT
 IS_OP:      
