@@ -16,7 +16,12 @@ module S86_sys (
     input  [23:0] IO_Switch,//switch
     //segs
     output [7:0] IO_AN, //digit
-    output [7:0] IO_SEG
+    output [7:0] IO_SEG,
+    //buzzzer
+    output IO_Buzzer,
+    //keypad
+    input   [3:0] IO_ROW,
+    output  [3:0] IO_COL
  );
 
     //WB总线
@@ -28,7 +33,7 @@ module S86_sys (
     //读写发生器:ior/iow/memw/memr     
     wire ior_n, iow_n, memw_n, memr_n; 
     //地址译码器
-    wire swcsn, digitcsn, s8254csn; 
+    wire swcsn, digitcsn, s8254csn, buzzercsn, keypadcsn; 
     //RAM
     wire [15:0] mem_dat_i;
     wire        memack;
@@ -36,7 +41,8 @@ module S86_sys (
     wire [15:0] switch_out;
     //S8254
     wire [7:0] s8254out;
- 
+    //Keypad
+    wire [15:0] keypad_out;
  
     //S86 processor
     S86_0 S86_proc (
@@ -78,11 +84,12 @@ module S86_sys (
         .G2BN(adr[7] | adr[8]),                                                 
         .Y1N(swcsn),
         .Y2N(digitcsn),
-        .Y4N(s8254csn)                                                  
+        .Y3N(keypadcsn),              
+        .Y4N(s8254csn),
+        .Y6N(buzzercsn)                                                          
     );
     
     //输入数据多路选择器
-    // Serica: s8254的输出要扩展成16位
     Muxdati U2(
         .wb_tga_i(tga),
         .RDN(ior_n & memr_n),
@@ -91,6 +98,8 @@ module S86_sys (
         .IODAT0I(switch_out),
         .IOCS1_N(s8254csn),
         .IODAT1I({8'h00,s8254out}),
+        .IOCS2_N(keypadcsn),
+        .IODAT2I(keypad_out),
         .DATO(dat_i)
     );
     
@@ -100,6 +109,8 @@ module S86_sys (
         .IOCS0_N(swcsn),
         .IOCS1_N(digitcsn),
         .IOCS2_N(s8254csn),
+        .IOCS3_N(buzzercsn),
+        .IOCS4_N(keypadcsn),
         .ACK(ack)
     );
     
@@ -144,19 +155,38 @@ module S86_sys (
         .segs(IO_SEG)
     );
     
-    wire clk_1HZ;
-    divclk U4(.clk(CLK10MHZ), .rst(CPU_RESET),.clk_sys(clk_1HZ));
-
+    //定时计数器
+    wire out0;
     S_8254 D2(    
-        .clk0(clk_1HZ),      // Counter0输入时钟
-        .gate0(IO_Switch[23]), // Counter0使能
-        .out0(IO_LED[23]),     // Counter0输出波形
-        .a(adr[2:1]),        // 地址线
-        .id(dat_o[7:0]),     // 输入数据
-        .od(s8254out),       // 输出数据
-        .CS_N(s8254csn),     // 片选
-        .IOR_N(ior_n),       // 读信号
-        .IOW_N(iow_n)        // 写信号
-    );        
-
+        .clk0(CLK10MHZ),  //Counter0输入时钟
+        .gate0(1'b1),    //Counter0使能
+        .out0(out0),     //Counter0输出波形
+        .a(adr[2:1]),    //地址线
+        .id(dat_o[7:0]), //输入数据
+        .od(s8254out),   //输出数据
+        .CS_N(s8254csn), //片选
+        .IOR_N(ior_n),   //读信号
+        .IOW_N(iow_n)    //写信号
+    );      
+    
+    //并行口扩展
+    Buzzer D3(
+        .clk_in(out0), //蜂鸣器输入时钟
+        .CS_N(buzzercsn),
+        .IOW_N(iow_n),
+        .din(dat_o[7:0]),
+        .buzzer(IO_Buzzer)
+    );    
+    
+    //4X4键盘    
+    Keypad D4(
+        .wb_clk_i(CLK10MHZ),
+        .wb_rst_i(CPU_RESET),
+        .wb_dat_o(keypad_out),
+        .IOR_N(ior_n),
+        .CS_N(keypadcsn),
+        .row(IO_ROW),
+        .col(IO_COL)
+    );
+        
 endmodule
