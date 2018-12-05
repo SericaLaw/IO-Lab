@@ -20,9 +20,16 @@ module Decoder (
         assign cba = {C,B,A};
         assign G = {G1,G2AN,G2BN};
         assign Y0N = YN[0];
-         ……//定义寄存器用作always块输出暂存，并将输出与之相对应
-        always @(*)
-        begin
-           ……//填写38译码器
-        end
+        assign Y1N = YN[1];
+        assign Y2N = YN[2];
+        assign Y3N = YN[3];
+        assign Y4N = YN[4];
+        assign Y5N = YN[5];
+        assign Y6N = YN[6];
+        assign Y7N = YN[7];
+        always @(A or B or C or G1 or G2AN or G2BN)
+            begin
+                YN = 8'b11111111;
+                if(G==3'b100)   YN[cba] = 0;
+            end
 endmodule

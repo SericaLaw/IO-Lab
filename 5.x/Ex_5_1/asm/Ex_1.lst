@@ -1,0 +1,35 @@
+Microsoft (R) Macro Assembler Version 6.11		    12/04/18 22:06:14
+Ex_1.asm						     Page 1 - 1
+
+
+ 0000				CODE SEGMENT
+				    ASSUME CS:CODE
+ 0000				START:
+ 0000  E5 10			    IN AX,10H
+ 0002  E7 00			    OUT 0H, AX
+ 0004  E5 12			    IN AX,12H
+ 0006  E7 02			    OUT 2H, AX
+ 0008  EB F6			    JMP START
+ 000A				CODE ENDS
+				END START
+Microsoft (R) Macro Assembler Version 6.11		    12/04/18 22:06:14
+Ex_1.asm						     Symbols 2 - 1
+
+
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+CODE . . . . . . . . . . . . . .	16 Bit	 000A	  Para	  Private 
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+START  . . . . . . . . . . . . .	L Near	 0000	  CODE	
+
+	   0 Warnings
+	   0 Errors

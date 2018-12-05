@@ -65,14 +65,14 @@ module S86_sys (
     //地址译码器
     wire ledcsn, swcsn; 
 	Decoder U1(
-        .A(???),                                                   
-        .B(???),                                                  
-        .C(???),                                                  
-        .G1(???),                                                
-        .G2AN(???),                                           
-        .G2BN(???),                                         
-        .Y0N(???),                                                 
-        .Y1N(???)                                                   
+        .A(adr[4]),                                                   
+        .B(adr[5]),                                                  
+        .C(adr[6]),                                                  
+        .G1(1),                                                
+        .G2AN(ior_n & iow_n),                                           
+        .G2BN(adr[7]+adr[8]+adr[9]),                                         
+        .Y0N(ledcsn),                                                 
+        .Y1N(swcsn)                                                   
     );
     
     //输入数据多路选择器
