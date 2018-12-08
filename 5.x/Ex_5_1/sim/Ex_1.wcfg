@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="S86_sim_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="S86_sim" />
+            <top_module name="glbl" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="29580453554fs"></ZoomStartTime>
+      <ZoomEndTime time="31283909290fs"></ZoomEndTime>
+      <Cursor1Time time="31000000000fs"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="141"></NameColumnWidth>
+      <ValueColumnWidth column_width="132"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="9" />
+   <wvobject fp_name="/S86_sim/S86_sys/swcsn" type="logic">
+      <obj_property name="ElementShortName">swcsn</obj_property>
+      <obj_property name="ObjectShortName">swcsn</obj_property>
+   </wvobject>
+   <wvobject fp_name="/S86_sim/S86_sys/ior_n" type="logic">
+      <obj_property name="ElementShortName">ior_n</obj_property>
+      <obj_property name="ObjectShortName">ior_n</obj_property>
+   </wvobject>
+   <wvobject fp_name="/S86_sim/S86_sys/D1/wb_adr_i" type="logic">
+      <obj_property name="ElementShortName">wb_adr_i</obj_property>
+      <obj_property name="ObjectShortName">wb_adr_i</obj_property>
+   </wvobject>
+   <wvobject fp_name="/S86_sim/sw" type="array">
+      <obj_property name="ElementShortName">sw[23:0]</obj_property>
+      <obj_property name="ObjectShortName">sw[23:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/S86_sim/S86_sys/switch_out" type="array">
+      <obj_property name="ElementShortName">switch_out[15:0]</obj_property>
+      <obj_property name="ObjectShortName">switch_out[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/S86_sim/S86_sys/ledcsn" type="logic">
+      <obj_property name="ElementShortName">ledcsn</obj_property>
+      <obj_property name="ObjectShortName">ledcsn</obj_property>
+   </wvobject>
+   <wvobject fp_name="/S86_sim/S86_sys/iow_n" type="logic">
+      <obj_property name="ElementShortName">iow_n</obj_property>
+      <obj_property name="ObjectShortName">iow_n</obj_property>
+   </wvobject>
+   <wvobject fp_name="/S86_sim/S86_sys/D0/wb_adr_i" type="logic">
+      <obj_property name="ElementShortName">wb_adr_i</obj_property>
+      <obj_property name="ObjectShortName">wb_adr_i</obj_property>
+   </wvobject>
+   <wvobject fp_name="/S86_sim/led" type="array">
+      <obj_property name="ElementShortName">led[23:0]</obj_property>
+      <obj_property name="ObjectShortName">led[23:0]</obj_property>
+   </wvobject>
+</wave_config>
