@@ -1,0 +1,84 @@
+Microsoft (R) Macro Assembler Version 6.11		    12/08/18 19:49:32
+Ex_5_2.asm						     Page 1 - 1
+
+
+ 0000				CODE SEGMENT 'CODE'
+				    ASSUME CS:CODE
+ 0000				START:
+ 0000  B0 FF			    MOV AL, 0FFH
+ 0002  E6 24				OUT 24H, AL
+ 0004				INPUT_WMODE:
+				    ; IF SW[16]==1, WRITE WORKING MODE
+ 0004  E4 12			    IN AL, 12H  ; READ HIGHER 8 DIGITS FROM SWITCH
+ 0006  A8 01			    TEST AL, 01H
+ 0008  74 FA			    JZ INPUT_WMODE
+ 000A  D0 E8			    SHR AL, 1 ; NOW AL = D7..D4 M2 M1 M0 BCD
+ 000C  0C 30			    OR AL, 00110000B ; NOW AL = D7D6 RW1 RW0 M2..M0 BCD
+ 000E  24 3F			    AND AL, 00111111B ; D7D6=00
+ 0010  E6 46			    OUT 46H, AL ; WIRTE WMODE
+				    
+ 0012  B0 FF			    MOV AL, 0FFH
+ 0014  E6 24			    OUT 24H, AL
+				    
+ 0016				INPUT_INITIAL_VALUE:
+ 0016  E4 12			    IN AL, 12H
+ 0018  A8 20			    TEST AL, 00100000B  ; IF SW[20]==1, WRITE INITIAL VALUE
+ 001A  74 FA			    JZ INPUT_INITIAL_VALUE
+ 001C  E5 10			    IN AX, 10H  ; READ LOWER 16 DIGITS FROM SWITCH
+ 001E  E6 40			    OUT 40H, AL ; INIT COUNTER #0, LOWER BYTE FIRST
+ 0020  8A C4			    MOV AL, AH
+ 0022  E6 40			    OUT 40H, AL
+ 0024				R_BACK:
+ 0024  32 DB			    XOR BL, BL
+ 0026  E4 12			    IN AL, 12H
+ 0028  A8 40			    TEST AL, 01000000B
+ 002A  74 0E			    JZ LOCK_STATE
+
+ 002C				READ_CUR_COUNT:
+ 002C  B0 D2			    MOV AL, 11010010B   ; READ CUR COUNT FROM COUNTER #0
+ 002E  E6 46			    OUT 46H, AL
+ 0030  E4 40			    IN AL, 40H  ; READ TWICE
+ 0032  E6 20			    OUT 20H, AL ; DISPLAY
+ 0034  E4 40			    IN AL, 40H
+ 0036  E6 20			    OUT 20H, AL
+ 0038  EB EA			    JMP R_BACK
+
+ 003A				LOCK_STATE:
+ 003A  80 FB FF			    CMP BL, 0FFH
+ 003D  74 E5			    JE R_BACK
+ 003F  B3 FF			    MOV BL, 0FFH
+ 0041  B0 E2			    MOV AL, 11100010B
+ 0043  E6 46			    OUT 46H, AL
+ 0045  E4 40			    IN AL, 40H  ; READ STATE
+ 0047  E6 20			    OUT 20H, AL ; DISPLAY
+ 0049  24 80			    AND AL, 80H
+ 004B  E6 02			    OUT 02H, AL ; DISPLAY OUT ON RLED7
+ 004D  EB D5			    JMP R_BACK
+ 004F				CODE ENDS
+				    END START
+Microsoft (R) Macro Assembler Version 6.11		    12/08/18 19:49:32
+Ex_5_2.asm						     Symbols 2 - 1
+
+
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+CODE . . . . . . . . . . . . . .	16 Bit	 004F	  Para	  Private 'CODE'	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+INPUT_INITIAL_VALUE  . . . . . .	L Near	 0016	  CODE	
+INPUT_WMODE  . . . . . . . . . .	L Near	 0004	  CODE	
+LOCK_STATE . . . . . . . . . . .	L Near	 003A	  CODE	
+READ_CUR_COUNT . . . . . . . . .	L Near	 002C	  CODE	
+R_BACK . . . . . . . . . . . . .	L Near	 0024	  CODE	
+START  . . . . . . . . . . . . .	L Near	 0000	  CODE	
+
+	   0 Warnings
+	   0 Errors
