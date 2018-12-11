@@ -1,0 +1,73 @@
+Microsoft (R) Macro Assembler Version 6.11		    12/11/18 19:28:25
+Ex_5_2_ref.asm						     Page 1 - 1
+
+
+ 0000				CODE SEGMENT
+				    ASSUME DS:CODE
+ 0000				INIT:
+ 0000  B0 0F			    MOV AL,0FH
+ 0002  E6 24			    OUT 24H,AL;initialize digit
+ 0004  E5 12			    IN AX,12H
+ 0006  8B D8			    MOV BX,AX
+ 0008  83 E3 0D			    AND BX,000DH;SW19,18,16
+ 000B  83 FB 0D			    CMP BX,000DH
+ 000E  75 F0			    JNE INIT
+ 0010  B3 30			    MOV BL,00110000B
+ 0012  24 1E			    AND AL,00011110B
+ 0014  D0 E8			    SHR AL,1
+ 0016  0A C3			    OR AL,BL
+ 0018  E6 46			    OUT 46H,AL
+ 001A				AGAIN:
+ 001A  E5 12			    IN AX,12H
+ 001C  A9 0020			    TEST AX,0020H;SW21
+ 001F  74 08			    JZ READ
+ 0021  E5 10			    IN AX,10H
+ 0023  E6 40			    OUT 40H,AL
+ 0025  8A C4			    MOV AL,AH
+ 0027  E6 40			    OUT 40H,AL
+ 0029				READ:
+ 0029  E5 12			    IN AX,12H
+ 002B  A9 0040			    TEST AX,0040H;SW22
+ 002E  74 0A			    JZ RD_COUNT
+ 0030  B0 E2			    MOV AL,11100010B
+ 0032  E6 46			    OUT 46H,AL
+ 0034  E4 40			    IN AL,40H
+ 0036  B4 00			    MOV AH,0
+ 0038  EB 0C			    JMP DISPLAY
+ 003A				RD_COUNT:
+ 003A  B0 D2			    MOV AL,11010010B
+ 003C  E6 46			    OUT 46H,AL
+ 003E  E4 40			    IN AL,40H
+ 0040  8A E0			    MOV AH,AL
+ 0042  E4 40			    IN AL,40H
+ 0044  86 E0			    XCHG AH,AL
+ 0046				DISPLAY:
+ 0046  E7 20			    OUT 20H,AX
+ 0048  EB D0			    JMP AGAIN
+ 004A				CODE ENDS
+				END INIT
+Microsoft (R) Macro Assembler Version 6.11		    12/11/18 19:28:25
+Ex_5_2_ref.asm						     Symbols 2 - 1
+
+
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+CODE . . . . . . . . . . . . . .	16 Bit	 004A	  Para	  Private 
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+AGAIN  . . . . . . . . . . . . .	L Near	 001A	  CODE	
+DISPLAY  . . . . . . . . . . . .	L Near	 0046	  CODE	
+INIT . . . . . . . . . . . . . .	L Near	 0000	  CODE	
+RD_COUNT . . . . . . . . . . . .	L Near	 003A	  CODE	
+READ . . . . . . . . . . . . . .	L Near	 0029	  CODE	
+
+	   0 Warnings
+	   0 Errors

@@ -49,6 +49,7 @@ module S_8254(
     // Dae: D5D4=01
     //assign wrback = (!CS_N) & (!IOR_N) & (IOW_N) & (a[1]) & (a[0]) & (id[7]) & (id[6]) & (!id[0]);
     assign wrback =  (!CS_N) & (IOR_N | IOW_N) & (a[1]) & (a[0]) &(id[7] & id[6] & (!id[5]) & id[4] & (!id[0]));
+
     // Serica: ¶ÁÐ´¼ÆÊýÆ÷0 A1A0=00
     assign rcounter0 = (!CS_N) & (!IOR_N) & (IOW_N) & (!a[1]) & (!a[0]);
     assign wcounter0 = (!CS_N) & (IOR_N) & (!IOW_N) & (!a[1]) & (!a[0]);

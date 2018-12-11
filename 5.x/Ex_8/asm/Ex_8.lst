@@ -1,0 +1,91 @@
+Microsoft (R) Macro Assembler Version 6.11		    12/11/18 14:57:57
+Ex_8.asm						     Page 1 - 1
+
+
+ 0000				DATA SEGMENT 'DATA'
+ 0000 0106 0126 014A 015D	    MUS_RANK    DW  262, 294, 330, 349, 392, 440, 494, 523
+       0188 01B8 01EE
+       020B
+				    ; 10 000 000 HZ
+ 0010 0098			    CLK_HI  DW  98H
+ 0012 9680			    CLK_LO  DW  9680H
+ 0014				DATA ENDS
+ 0000				CODE SEGMENT 'CODE'
+				    ASSUME DS:DATA, CS:CODE
+ 0000				START:
+ 0000  B8 0080			    MOV AX, 0080H
+ 0003  8E D8			    MOV DS, AX
+				    ; INIT DISPLAY
+ 0005  B8 00FF			    MOV AX, 0FFH
+ 0008  E7 24			    OUT 24H, AX
+				    ; DISABLE BUZZER
+ 000A  32 C0			    XOR AL, AL
+ 000C  E6 60			    OUT 60H, AL
+				    ; INIT 8254
+ 000E  B0 36			    MOV AL, 00110110B
+ 0010  E6 46			    OUT 46H, AL
+ 0012				INPUT:
+				    ; READ KEYBOARD
+ 0012  E5 30			    IN AX, 30H
+ 0014  A8 20			    TEST AL, 20H    ; WHEN HOLDING THE KEY
+ 0016  74 31			    JZ DISABLE_BUZZER
+ 0018  83 E0 0F			    AND AX, 000FH
+ 001B  83 F8 00			    CMP AX, 0
+ 001E  74 29			    JZ DISABLE_BUZZER
+ 0020  83 F8 09			    CMP AX, 9H
+ 0023  73 24			    JNC DISABLE_BUZZER   ; IF INPUT > 9, INPUT AGAIN
+				    ; DISPLAY INPUT
+ 0025  E7 20			    OUT 20H, AX
+ 0027  8D 36 0000 R		    LEA SI, MUS_RANK
+ 002B  48			    DEC AX
+ 002C  03 F0			    ADD SI, AX   ; SI = SI + (AX - 1) * 2
+ 002E  03 F0			    ADD SI, AX
+ 0030  8B 16 0010 R		    MOV DX, CLK_HI
+ 0034  A1 0012 R		    MOV AX, CLK_LO
+ 0037  8B 3C			    MOV DI, [SI]
+ 0039  F7 F7			    DIV DI  ; CALC INIT VALUE
+ 003B  E7 22			    OUT 22H, AX ; DISPLAY IT
+ 003D  E6 40			    OUT 40H, AL
+ 003F  8A C4			    MOV AL, AH
+ 0041  E6 40			    OUT 40H, AL
+				    ; ENABLE BUZZER
+ 0043  B0 01			    MOV AL, 1
+ 0045  E6 60			    OUT 60H, AL
+ 0047  EB C9			    JMP INPUT
+ 0049				DISABLE_BUZZER:
+				    ; DISABLE BUZZER
+ 0049  33 C0			    XOR AX, AX
+ 004B  E6 60			    OUT 60H, AL
+				    ; CLEAR DISPLAY
+ 004D  E7 20			    OUT 20H, AX
+ 004F  E7 22			    OUT 22H, AX
+ 0051  EB BF			    JMP INPUT
+ 0053				CODE ENDS
+				    END START
+Microsoft (R) Macro Assembler Version 6.11		    12/11/18 14:57:57
+Ex_8.asm						     Symbols 2 - 1
+
+
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+CODE . . . . . . . . . . . . . .	16 Bit	 0053	  Para	  Private 'CODE'	
+DATA . . . . . . . . . . . . . .	16 Bit	 0014	  Para	  Private 'DATA'	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+CLK_HI . . . . . . . . . . . . .	Word	 0010	  DATA	
+CLK_LO . . . . . . . . . . . . .	Word	 0012	  DATA	
+DISABLE_BUZZER . . . . . . . . .	L Near	 0049	  CODE	
+INPUT  . . . . . . . . . . . . .	L Near	 0012	  CODE	
+MUS_RANK . . . . . . . . . . . .	Word	 0000	  DATA	
+START  . . . . . . . . . . . . .	L Near	 0000	  CODE	
+
+	   0 Warnings
+	   0 Errors
