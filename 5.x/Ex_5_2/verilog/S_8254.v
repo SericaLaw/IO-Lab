@@ -68,7 +68,9 @@ module S_8254(
     
     //计数初值寄存器：CR
     // Serica: wcr表示初值已写入
-    assign wcr = wcounter0 & wcrflag;
+    // assign wcr = wcounter0 & wcrflag;
+    // Dae: 初值写入的条件应该是wcrflag与crinitflag
+    assign wcr = crinitflag & wcrflag;
     always @ (posedge wcounter0 or posedge wmode) begin
         // Serica: 写工作方式字
         if(wmode) begin
@@ -81,7 +83,10 @@ module S_8254(
         end else begin
             case (crsta)
                 // Serica: 可从状态字中获取工作方式 SR[0]=1为BCD码计数 SR[3:1]=011为方式3
-                2'b01: if(!((SR[0] & ((id[3:0] > 4'h9) | (id[7:4] > 4'h9))) | ((SR[3:1]==3'b011) & (id[7:0]==8'h01)))) begin   //写入初值满足条件：1.BCD码计数时，满足范围 2.方式3计数时，初值不为1
+                // 2'b01: if(!((SR[0] & ((id[3:0] > 4'h9) | (id[7:4] > 4'h9))) | ((SR[3:1]==3'b011) & (id[7:0]==8'h01)))) begin   //写入初值满足条件：1.BCD码计数时，满足范围 2.方式3计数时，初值不为1
+                // Dae: 实际上要满足：1.BCD码计数时，满足范围 2.方式3计数时，初值不为1
+                // Dae: 这个设计简直就是魔鬼……转化成两个条件，两个条件需要同时满足：（为BCD则满足范围|非BCD）& (方式3初值不为1|非方式3)
+                2'b01: if((((SR[0]) & (id[3:0] <= 4'h9) & (id[7:4] <= 4'h9))|(!SR[0])) & (((SR[3:1]==3'b011) & (id[7:0]!=8'h01)) | (SR[3:1]!=3'b011)) )) begin   //写入初值满足条件：1.BCD码计数时，满足范围 2.方式3计数时，初值不为1
                            CR <= {8'h00,id};
                            wcrflag <= 1;
                            crinitflag <= 1;  //已初始化
@@ -89,7 +94,9 @@ module S_8254(
                            CR <= CR;
                            wcrflag <= 0;
                        end //只写低8位
-                2'b10: if(!(SR[0] & (id[3:0] > 4'h9) | (SR[0] &  (id[7:4] > 4'h9)))) begin //当BCD码计数，初值符合要求时，写入初值
+                // 2'b10: if(!(SR[0] & (id[3:0] > 4'h9) | (SR[0] &  (id[7:4] > 4'h9)))) begin //当BCD码计数，初值符合要求时，写入初值
+                // Dae: 同line 89错误
+                2'b10: if(((SR[0]) & (id[3:0] <= 4'h9) & (id[7:4] <= 4'h9))|(!SR[0])) begin //当BCD码计数，初值符合要求时，写入初值
                            CR <= {id,8'h00};
                            wcrflag <= 1;
                            crinitflag <= 1;  //已初始化
@@ -99,7 +106,9 @@ module S_8254(
                        end //只写高8位
                 2'b11: if(!crflag)begin //先写低8位
                            CRtemp <= id; crflag <= 1; wcrflag <= 0;
-                       end else if(!((SR[0] & ((id[3:0] > 4'h9) | (id[7:4] > 4'h9))) | (SR[0] & ((CRtemp[7:4] > 4'h9) | (CRtemp[3:0] > 4'h9))) | ((SR[3:1]==3'b011) & (id[7:0]==8'h00) & (CRtemp==8'h01)))) begin //写入初值满足条件：1.BCD码计数时，满足范围 2.方式3计数时，初值不为1
+                    //    end else if(!((SR[0] & ((id[3:0] > 4'h9) | (id[7:4] > 4'h9))) | (SR[0] & ((CRtemp[7:4] > 4'h9) | (CRtemp[3:0] > 4'h9))) | ((SR[3:1]==3'b011) & (id[7:0]==8'h00) & (CRtemp==8'h01)))) begin //写入初值满足条件：1.BCD码计数时，满足范围 2.方式3计数时，初值不为1
+                    // Dae: 这里和第89行差不多
+                       end else if ((((SR[0]) & (id[3:0] <= 4'h9) & (id[7:4] <= 4'h9) & (CRtemp[7:4]<=4'h9) & (CRtemp[3:0]<=4'h9))|(!SR[0])) & (((SR[3:1]==3'b011) & (id[7:0]!=8'h00)& (CRtemp==8'h01)) | (SR[3:1]!=3'b011)) )) begin //写入初值满足条件：1.BCD码计数时，满足范围 2.方式3计数时，初值不为1
                            CR <= {id, CRtemp}; crflag <= 0; wcrflag <= 1; crinitflag <= 1; 
                        end else begin //再写高8位
                            CR <= CR; crflag <= 0; wcrflag <= 0;
