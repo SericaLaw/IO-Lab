@@ -44,11 +44,11 @@ module S_8254(
     // Serica : 读当前计数值的方法： 1. 工作方式控制字 A1A0=11 D7D6 != 11 D5D4=00; 2. 读回命令 A1A0=11 D7D6=11 D5D4=01 D0=0
     // Dae: 另外wnowcount, wrback应该指的是两种读取计数值的方法吧？
     //assign wnowcount = (!CS_N) & (IOR_N) & (!IOW_N) & (a[1]) & (a[0]) & ((!(id[7] & id[6]) & (!id[5]) & (!id[4])) | (id[7] & id[6] & (!id[5]) & id[4] & (!id[0])));
-    assign wnowcount = (!CS_N) & (IOR_N | IOW_N) & (a[1]) & (a[0]) & ((!(id[7] & id[6]) & (!id[5]) & (!id[4]))) ;
+    assign wnowcount = (!CS_N) & (IOR_N) & (!IOW_N) & (a[1]) & (a[0]) & (((!(id[7]&id[6])) & (!id[5]) & (!id[4])) | (id[7] & (id[6]) &(!id[5]) & (id[1]) & (!id[0])));
     // Serica: A1A0=00 D7D6=00 D0=0
     // Dae: D5D4=01
     //assign wrback = (!CS_N) & (!IOR_N) & (IOW_N) & (a[1]) & (a[0]) & (id[7]) & (id[6]) & (!id[0]);
-    assign wrback =  (!CS_N) & (IOR_N | IOW_N) & (a[1]) & (a[0]) &(id[7] & id[6] & (!id[5]) & id[4] & (!id[0]));
+    assign wrback = (!CS_N) & (IOR_N) & (!IOW_N) & (a[1]) & (a[0]) & (id[7]) & (id[6]) & (!(id[5]&id[4])) & (id[1]) & (!id[0]);
 
     // Serica: 读写计数器0 A1A0=00
     assign rcounter0 = (!CS_N) & (!IOR_N) & (IOW_N) & (!a[1]) & (!a[0]);
@@ -68,9 +68,7 @@ module S_8254(
     
     //计数初值寄存器：CR
     // Serica: wcr表示初值已写入
-    // assign wcr = wcounter0 & wcrflag;
-    // Dae: 初值写入的条件应该是wcrflag与crinitflag
-    assign wcr = crinitflag & wcrflag;
+    assign wcr = wcounter0 & wcrflag;
     always @ (posedge wcounter0 or posedge wmode) begin
         // Serica: 写工作方式字
         if(wmode) begin

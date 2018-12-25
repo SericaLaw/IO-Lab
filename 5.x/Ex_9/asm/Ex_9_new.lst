@@ -1,0 +1,241 @@
+Microsoft (R) Macro Assembler Version 6.11		    12/24/18 22:41:16
+Ex_9_new.asm						     Page 1 - 1
+
+
+
+ 0000				DATA SEGMENT
+ 0000 0A			    COUNT DB 10
+ 0001 01			    STATE DB 1
+ 0002 FF				FLAG DB 0FFH
+ 0003				DATA ENDS
+
+ 0000				CODE SEGMENT
+				    ASSUME CS:CODE, DS:DATA 
+ 0000				START:
+ 0000  FA			    CLI
+ 0001  B8 0080			    MOV AX,  0080H
+ 0004  8E D8			    MOV DS,  AX
+ 0006  C6 06 0000 R 0A			MOV BYTE PTR COUNT, 10
+ 000B  C6 06 0001 R 01			MOV BYTE PTR STATE, 1
+				    ; INIT PIC
+ 0010  B0 12			    MOV AL, 00010010B   ; ICW1
+ 0012  E6 50			    OUT 50H, AL
+ 0014  EB 00			    JMP $+2
+ 0016  B0 10			    MOV AL, 00010000B   ; ICW2 = 10H
+ 0018  E6 52			    OUT 52H, AL
+ 001A  EB 00			    JMP $+2
+				    ; OCW1
+ 001C  B0 00			    MOV AL, 00H
+ 001E  E6 52			    OUT 52H, AL
+ 0020  EB 00				JMP $+2
+				    ; OCW2
+ 0022  B0 60				MOV AL, 01100000B
+ 0024  E6 50			    OUT 50H, AL
+ 0026  EB 00				JMP $+2
+				    ; MODIFY IVT
+ 0028  B8 0000			    MOV AX, 0
+ 002B  8E C0			    MOV ES, AX  ; START FROM 0000H						
+ 002D  BE 0040			    MOV SI, 10H * 4 ; 10H
+ 0030  B8 006F R		    MOV AX, OFFSET SERVICE
+ 0033  26: 89 04		    MOV WORD PTR ES:[SI], AX
+ 0036  8C C8			    MOV AX, CS
+ 0038  26: 89 44 02		    MOV WORD PTR ES:[SI+2], AX  
+
+				   
+
+				    ; INIT 8254
+ 003C  B0 36			    MOV AL, 00110110B   ; T/C0 WOMODE = 3
+ 003E  E6 46			    OUT 46H, AL
+ 0040  EB 00				JMP $+2
+ 0042  B8 C350			    MOV AX, 50000					
+ 0045  E6 40			    OUT 40H, AL
+ 0047  EB 00				JMP $+2
+ 0049  8A C4			    MOV AL, AH
+ 004B  E6 40			    OUT 40H, AL
+ 004D  EB 00				JMP $+2
+ 004F  B0 76			    MOV AL, 01110110B   ; T/C1
+ 0051  E6 46			    OUT 46H, AL
+ 0053  EB 00				JMP $+2
+ 0055  B8 00C8			    MOV AX, 200   ; 1HZ
+ 0058  E6 42			    OUT 42H, AL
+ 005A  EB 00				JMP $+2
+ 005C  8A C4			    MOV AL, AH
+ 005E  E6 42			    OUT 42H, AL
+ 0060  EB 00				JMP $+2
+
+				    ; INIT 8255
+ 0062  B0 80			    MOV AL, 10000000B;
+ 0064  E6 66				OUT 66H, AL
+ 0066  EB 00				JMP $+2
+
+					; ENABLE DISPLAY
+ 0068  B0 FF			    MOV AL, 0FFH
+ 006A  E6 64			    OUT 64H, AL
+
+				 
+ 006C  FB			    STI
+ 006D				; DISPLAY8254:
+				;     MOV AL, 11010100B
+				;     OUT 46H, AL
+
+				;     IN AL, 42H
+				;     MOV AH, AL
+				;     IN AL, 42H
+				;     XCHG AH, AL
+				;     OUT 62H, AX
+				;     JMP DISPLAY8254
+ 006D  EB FE			    JMP $
+
+ 006F				SERVICE PROC
+ 006F  FB			    STI
+ 0070  1E			    PUSH DS
+				    ; MOV AL, 0FFH
+				    ; OUT 60H, AL
+					; JMP $+2
+ 0071  80 3E 0001 R 01			CMP STATE, 1H
+ 0076  74 15				JZ S1
+ 0078  80 3E 0001 R 02			CMP STATE, 2H
+ 007D  74 35				JZ S2
+ 007F  80 3E 0001 R 03			CMP STATE, 3H
+ 0084  74 60				JZ S3
+ 0086  80 3E 0001 R 04			CMP STATE, 4H
+ 008B  74 7A				JZ S4
+ 008D				S1:
+				    ; GD1 (PA5), RD0 (PA2)
+ 008D  B0 24				MOV AL, 24H
+ 008F  E6 60				OUT 60H, AL
+ 0091  EB 00				JMP $+2
+ 0093  FE 0E 0000 R			DEC COUNT
+ 0097  A0 0000 R			MOV AL, COUNT
+ 009A  FB				STI
+ 009B  E6 62				OUT 62H, AL ; DISPLAY
+ 009D  EB 00				JMP $+2
+ 009F  FA				CLI
+ 00A0  3C 00				CMP AL, 0
+ 00A2  76 03 E9 0092			JA DONE ; COUNT > 0
+
+ 00A7  C6 06 0000 R 04			MOV COUNT, 4
+ 00AC  C6 06 0001 R 02			MOV STATE, 2
+ 00B1  E9 0085				JMP DONE
+ 00B4				S2:
+				    ; YD1 (PA6), RD0 (PA2)
+ 00B4  80 3E 0002 R FF			CMP FLAG, 0FFH
+ 00B9  74 06				JZ S21
+				    ; DISABLE YD1
+ 00BB  B0 04				MOV AL, 04H
+ 00BD  E6 60				OUT 60H, AL
+ 00BF  EB 04				JMP S22
+ 00C1				S21:
+ 00C1  B0 44				MOV AL, 44H
+ 00C3  E6 60				OUT 60H, AL
+ 00C5				S22:
+ 00C5  F6 16 0002 R		    NOT FLAG
+ 00C9  FE 0E 0000 R			DEC COUNT
+ 00CD  A0 0000 R			MOV AL, COUNT
+ 00D0  FB				STI
+ 00D1  E6 62				OUT 62H, AL
+ 00D3  EB 00				JMP $+2
+ 00D5  FA				CLI
+ 00D6  3C 00				CMP AL, 0
+ 00D8  77 5F				JA DONE
+
+ 00DA  C6 06 0000 R 0A			MOV COUNT, 10
+ 00DF  C6 06 0001 R 03			MOV STATE, 3
+ 00E4  EB 53				JMP DONE
+ 00E6				S3:
+				    ; GD0 (PA0), RD1(PA7)
+ 00E6  B0 81				MOV AL, 81H
+ 00E8  E6 60				OUT 60H, AL
+ 00EA  FE 0E 0000 R			DEC COUNT
+ 00EE  A0 0000 R			MOV AL, COUNT
+ 00F1  FB				STI
+ 00F2  E6 62				OUT 62H, AL
+ 00F4  EB 00				JMP $+2
+ 00F6  FA				CLI
+ 00F7  3C 00				CMP AL, 0
+ 00F9  77 3E				JA DONE
+
+ 00FB  C6 06 0000 R 04			MOV COUNT, 4
+ 0100  C6 06 0001 R 04			MOV STATE, 4
+ 0105  EB 32				JMP DONE
+ 0107				S4:
+				    ; YD0 (PA1), RD1 (PA7)
+ 0107  80 3E 0002 R FF			CMP FLAG, 0FFH
+ 010C  74 06				JZ S41
+
+ 010E  B0 80				MOV AL, 80H
+ 0110  E6 60				OUT 60H, AL
+ 0112  EB 04				JMP S42
+ 0114				S41:
+ 0114  B0 82				MOV AL, 82H
+ 0116  E6 60				OUT 60H, AL
+					
+ 0118				S42:
+ 0118  F6 16 0002 R		    NOT FLAG
+ 011C  FE 0E 0000 R			DEC COUNT
+ 0120  A0 0000 R			MOV AL, COUNT
+ 0123  FB				STI
+ 0124  E6 62				OUT 62H, AL
+ 0126  EB 00				JMP $+2
+ 0128  FA				CLI
+ 0129  3C 00				CMP AL, 0
+ 012B  77 0C				JA DONE
+
+ 012D  C6 06 0000 R 0A			MOV COUNT, 10
+ 0132  C6 06 0001 R 01			MOV STATE, 1
+ 0137  EB 00				JMP DONE
+
+ 0139				DONE:
+ 0139  FA				CLI
+
+ 013A  B0 60			    MOV AL, 01100000B
+ 013C  E6 50			    OUT 50H, AL
+ 013E  1F			    POP DS
+
+ 013F  CF			    IRET
+
+ 0140				SERVICE ENDP
+
+ 0140				CODE ENDS
+				END START
+Microsoft (R) Macro Assembler Version 6.11		    12/24/18 22:41:16
+Ex_9_new.asm						     Symbols 2 - 1
+
+
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+CODE . . . . . . . . . . . . . .	16 Bit	 0140	  Para	  Private 
+DATA . . . . . . . . . . . . . .	16 Bit	 0003	  Para	  Private 
+
+
+Procedures,  parameters and locals:
+
+                N a m e                 Type     Value    Attr
+
+SERVICE  . . . . . . . . . . . .	P Near	 006F	  CODE	Length= 00D9 Private
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+COUNT  . . . . . . . . . . . . .	Byte	 0000	  DATA	
+DONE . . . . . . . . . . . . . .	L Near	 0139	  CODE	
+FLAG . . . . . . . . . . . . . .	Byte	 0002	  DATA	
+S1 . . . . . . . . . . . . . . .	L Near	 008D	  CODE	
+S21  . . . . . . . . . . . . . .	L Near	 00C1	  CODE	
+S22  . . . . . . . . . . . . . .	L Near	 00C5	  CODE	
+S2 . . . . . . . . . . . . . . .	L Near	 00B4	  CODE	
+S3 . . . . . . . . . . . . . . .	L Near	 00E6	  CODE	
+S41  . . . . . . . . . . . . . .	L Near	 0114	  CODE	
+S42  . . . . . . . . . . . . . .	L Near	 0118	  CODE	
+S4 . . . . . . . . . . . . . . .	L Near	 0107	  CODE	
+START  . . . . . . . . . . . . .	L Near	 0000	  CODE	
+STATE  . . . . . . . . . . . . .	Byte	 0001	  DATA	
+
+	   0 Warnings
+	   0 Errors

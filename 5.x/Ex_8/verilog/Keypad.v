@@ -9,14 +9,14 @@ module Keypad(
     input  [3:0]  row, // Serica: 
     output reg [3:0]  col
 );
-    reg         keysta;     // Serica: 键值保持标志
-    reg  [3:0]  keynum;     // Serica: 键值
-    reg         vaild;      // Serica: 键值有效标志 拼错了可海星
+    reg         keysta;     // Serica: ?????????
+    reg  [3:0]  keynum;     // Serica: ???
+    reg         vaild;      // Serica: ?????潩??? ?????????
     
     reg  [7:0]  keyvalue = 8'b0000_0000;
     reg [25:0]  counter_clk = 0;
     
-    assign wb_dat_o = {10'b0,keysta,vaild,keynum}; // Serica: 输出格式
+    assign wb_dat_o = {10'b0,keysta,vaild,keynum}; // Serica: ??????
 
     reg [1:0] next_state;
     reg [1:0] state;
@@ -37,18 +37,18 @@ module Keypad(
             next_state = scan;  
         end else 
             case(state) 
-            //完成手册中键盘消抖状态转换图的状态转换，注意对键值有效位的赋值
+            //???????潩??????????????????????????????潩潩????
             
             scan:begin if(keysta & (!IOR_N))begin
-            // Serica: 按下且读取，则进入等待状态S1，键值有效标志置1
+            // Serica: ???????????????????S1???????潩?????1
                     vaild = 1;
                     next_state <= waitend;
                 end
-                // Serica: 未按下或未读取，继续在状态S0
+                // Serica: 潩?????潩?????????????S0
                 else next_state <= state;
             end
             waitend:begin
-            // Serica: 状态S1 清楚有效标志，等待计时结束
+            // Serica: ??S1 ?????潩???????????????
                 vaild = 0;
                 if(counter_clk >= 2000000) next_state <= scan;
                 else next_state <= state;
@@ -58,18 +58,18 @@ module Keypad(
     
    always @(posedge wb_clk_i) begin
      if(counter_clk < 2000000) begin   //200ms
-//    if(counter_clk < 200) begin   //仿真用时钟   
+//    if(counter_clk < 200) begin   //?????????   
         counter_clk = counter_clk + 1; 
      end else begin
          case(col)
-         // Serica: 所有列线全为0 读出所有行线状态 如果有行线为0 说明有键按下
+         // Serica: ??????????0 ?????????????? ??????????0 ????潩?????
             4'b0000: begin if(row != 4'b1111) begin
                 keysta = 1; col = 4'b1110; end
                 else keysta = 0;
             end
-            /* Serica: 从第0列开始 每扫描一列 该列对应列线为0 其余为1；
-             读入行线状态 如果有一行为0，则该列交叉处的键被按下
-             如果所有行都是1 则列号+1 顺序扫描下一列
+            /* Serica: ???0?潩?? ??????? ???潩???????0 ?????1??
+             ?????????? ?????????0??????潩??潩?????????
+             ????????潩???1 ???潩?+1 ???????????
              */
              4'b1110: begin if(row != 4'b1111) begin
                 keyvalue = {4'b1110, row}; col = 4'b0000; counter_clk = 0; end
@@ -85,14 +85,14 @@ module Keypad(
              end
              4'b0111: begin if(row != 4'b1111) begin
                 keyvalue = {4'b0111, row}; col = 4'b0000; counter_clk = 0; end
-                else col = 4'b0000; // Serica: 开始新一轮扫描
+                else col = 4'b0000; // Serica: ???????????
              end
            default : begin col <= 4'b0000; keysta <= 0;end           
            endcase
        end
    end
     
-    always @* begin                           //键值译码
+    always @* begin                           //???????
         case(keyvalue[3:0])               //col
             4'b1110: begin
                 case(keyvalue[7:4])
@@ -100,7 +100,7 @@ module Keypad(
                     4'b1101: keynum = 4'b0100; // 4
                     4'b1011: keynum = 4'b0111; // 7
                     4'b0111: keynum = 4'b1110; // E
-                    default: begin end         //多键按下不处理
+                    default: begin end         //????????????
                 endcase
             end
               
@@ -110,7 +110,7 @@ module Keypad(
                     4'b1101: keynum = 4'b0101; // 5
                     4'b1011: keynum = 4'b1000; // 8
                     4'b0111: keynum = 4'b0000; // 0
-                    default: begin end         //多键按下不处理
+                    default: begin end         //????????????
                 endcase
             end
             
@@ -120,7 +120,7 @@ module Keypad(
                     4'b1101: keynum = 4'b0110; // 6
                     4'b1011: keynum = 4'b1001; // 9
                     4'b0111: keynum = 4'b1111; // F
-                    default: begin end         //多键按下不处理
+                    default: begin end         //????????????
                 endcase
             end
             
@@ -130,7 +130,7 @@ module Keypad(
                     4'b1101: keynum = 4'b1011; // B
                     4'b1011: keynum = 4'b1100; // C
                     4'b0111: keynum = 4'b1101; // D
-                    default: begin end         //多键按下不处理
+                    default: begin end         //????????????
                 endcase
             end
            
